@@ -22,6 +22,8 @@ Main idea is to have a reasonable estimation of location for first byte of chara
 We than obtain corrected location and character size through meta information
 
 # Algorithm
+Characters boundaries are identified by ICU library with icu::BreakIterator. 
+
 1. Find number of characters in string in O(n)
 2. If `byte size == number of characters` -> this is ASCII string, stop here
 

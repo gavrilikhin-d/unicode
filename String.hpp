@@ -2,9 +2,13 @@
 
 #include <string>
 #include <string_view>
+#include <iosfwd>
 
 namespace unicode
 {
+
+/// Structure to differentiate between char and count in repeat function
+struct Times { int32_t count; };
 
 /**
  *	 Unicode string - collection of user-percieved characters,
@@ -32,9 +36,6 @@ public:
 		return std::numeric_limits<SizeType>::max();
 	}
 
-	/// Structure to differentiate between char and count in repeat function
-	struct Times { SizeType count; };
-
 	/// Get ASCII character
 	static String repeat(char c, Times times) noexcept
 	{
@@ -56,15 +57,15 @@ public:
 	{
 		/// TODO: optimization, as we know this is ASCII
 	}
+	/// Create string from UTF-8 encoded characters
+	String(const char *str) : bytes(str) {}
+	/// Create string from UTF-8 encoded characters
+	String(std::string_view view) : bytes(view) {}
 	/// Create unicode string from utf-8 encoded string
 	String(std::string str) noexcept : bytes(std::move(str)) {}
 
-	/// Assign other utf-8 encoded string
-	String & operator=(std::string str) noexcept
-	{
-		bytes = std::move(str);
-		return *this;
-	}
+	/// Don't create string from nullptr
+	String(std::nullptr_t) = delete;
 
 	/// Is string empty?
 	bool isEmpty() const noexcept { return bytes.empty(); }
@@ -80,6 +81,16 @@ public:
 
 	operator const std::string &() const noexcept { return bytes; }
 	operator std::string_view() const noexcept { return bytes; }
+
+	friend std::ostream &operator<<(std::ostream &os, const String &str)
+	{
+		return os << str.bytes;
+	}
+
+	friend std::istream &operator>>(std::istream &is, String &str)
+	{
+		return is >> str.bytes;
+	}
 private:
 	/// UTF-8 encoded content of string
 	std::string bytes;

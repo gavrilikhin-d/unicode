@@ -35,6 +35,7 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD YES)
 include_directories(".")
 
 add_library(String INTERFACE)
-target_compile_features(String INTERFACE cxx_std_17)
+# default member initializer for bit-field is a C++20 extension
+target_compile_features(String INTERFACE cxx_std_20) 
 
 add_subdirectory(tests)

@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <iosfwd>
+#include <set>
 
 namespace unicode
 {
@@ -14,7 +15,7 @@ struct Times { int32_t count; };
  *	 Unicode string - collection of user-percieved characters,
  * 	 which may be represented with multiple Unicode code points.
  * 
- *   TODO: add allocators support
+ *   TODO: change to template<typename Container> CharacterView
  * 
  *   TODO: determine underlying UTF-8, UTF-16 or UTF-32 encoding on the fly
  */
@@ -29,6 +30,9 @@ public:
 	///     * @c Block memory efficiency
 	///     * Why would you need more than 2 GiB of contignuous text data?
 	using SizeType = int32_t;
+
+	/// Type for index of Character
+	using CharacterIndex = SizeType;
 
 	/// Get maximum number of characters in string
 	static constexpr SizeType maxSize() noexcept 
@@ -94,6 +98,62 @@ public:
 private:
 	/// UTF-8 encoded content of string
 	std::string bytes;
+
+	/// Metadata about string layout
+	struct Layout
+	{
+		/// Size in bytes
+		using ByteSize = uint16_t;
+
+		enum { NOT_EVALUATED = 0 };
+		/// Average character size in bytes
+		ByteSize averageCharacterSize : 8 = NOT_EVALUATED;
+
+		/// Number of characters in string
+		SizeType size = -1;
+
+		/// Sequence of characters with size that differs from average.
+		///
+		/// @note 
+		///	 This must be as much memory efficient as possible,
+		///	 as it will be created every ~8 characters (average word size)
+		///  in languages like Russian
+		struct [[gnu::packed]] Block
+		{
+			/// Index of the first character in block
+			CharacterIndex firstCharacter = 0;
+			/// Count of characters in block. 
+			/// 0 means 1 character, as block may not be empty
+			SizeType charactersCountMinusOne : 4 = 0;
+			/// Size of character in bytes.
+			/// 0 means 1 byte, as character occupies at least 1 byte
+			ByteSize characterSizeMinusOne : 4 = 0;
+
+			/// TODO: maybe store difference from first byte estimation?
+			/// it will be sum of byte differences from previous blocks
+			/// ByteDifference firstByteDifference = 0;
+
+			/// Sort blocks by first character index
+			constexpr bool operator<(const Block &other) const noexcept
+			{
+				return firstCharacter < other.firstCharacter;
+			}
+
+			/// Sort blocks by first character index
+			constexpr bool operator<(CharacterIndex index) const noexcept
+			{
+				return firstCharacter < index;
+			}
+		};
+		static_assert(sizeof(Block) == 5, "Block is not packed");
+
+		/// Set of character sequences where size differs from average.
+		/// Sorted by first character index
+		std::set<Block, std::less<>> blocks;
+	};
+
+	/// Metadata about string layout
+	mutable Layout layout;
 };
 
 } // namespace unicode

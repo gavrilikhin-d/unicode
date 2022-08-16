@@ -34,8 +34,13 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD YES)
 
 include_directories(".")
 
+# ICU dependency
+find_package(ICU COMPONENTS uc REQUIRED)
+include_directories(${ICU_INCLUDE_DIRS})
+
 add_library(String INTERFACE)
 # default member initializer for bit-field is a C++20 extension
-target_compile_features(String INTERFACE cxx_std_20) 
+target_compile_features(String INTERFACE cxx_std_20)
+target_link_libraries(String INTERFACE ICU::uc)
 
 add_subdirectory(tests)

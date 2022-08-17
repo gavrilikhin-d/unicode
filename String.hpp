@@ -5,6 +5,7 @@
 #include <iosfwd>
 #include <set>
 #include <memory>
+#include <cmath>
 
 #include <unicode/utext.h>
 #include <unicode/brkiter.h>
@@ -107,9 +108,10 @@ public:
 	/// @warning No validation is performed.
 	static String fromASCII(std::string ascii) noexcept
 	{
-		String str(std::move(ascii));
-		str.layout.size = ascii.size();
-		str.layout.averageCharacterSize = 1;
+		String str;
+		str._layout.size = ascii.size();
+		str._layout.averageCharacterSize = 1;
+		str.bytes = std::move(ascii);
 		return str;
 	}
 
@@ -120,7 +122,7 @@ public:
 	}
 
 	/// Create empty string
-	String() noexcept : layout(Layout{.averageCharacterSize = 1, .size = 0}) {}
+	String() noexcept : _layout(Layout{.averageCharacterSize = 1, .size = 0}) {}
 	/// Create string from ASCII character
 	String(char c) noexcept : String(String::fromASCII(std::string(1, c))) {}
 	/// Create string from ASCII characters
@@ -140,12 +142,7 @@ public:
 	[[nodiscard("Possibly expensive O(n) operation")]]
 	bool isASCII() const noexcept 
 	{ 
-		if (not layout.isEvaluated())
-		{
-			/// TODO: evaluate layout
-			assert(false && "not implemented");
-		}
-		return layout.averageCharacterSize == 1 && layout.blocks.empty(); 
+		return layout().isASCII();
 	}
 
 	/// Is string empty?
@@ -156,12 +153,7 @@ public:
 	SizeType size() const noexcept 
 	{ 
 		/// TODO: SizeRequest helper, that will lazily calculate size
-		if (not layout.isEvaluated())
-		{
-			/// TODO: evaluate layout
-			assert(false && "not implemented");
-		}
-		return layout.size;
+		return layout().size;
 	}
 
 	operator const std::string &() const noexcept { return bytes; }
@@ -237,10 +229,53 @@ private:
 		{
 			return averageCharacterSize != NOT_EVALUATED;
 		}
+
+		/// Is this layout for ASCII string?
+		constexpr bool isASCII() const noexcept
+		{
+			return averageCharacterSize == 1 && blocks.empty();
+		}
+		
+		/// Evaluate layout for utf-8 string
+		void evaluateFor(std::string_view str) noexcept
+		{
+			assert(str.size() <= String::maxSize() && "String is too big");
+
+			averageCharacterSize = 1;
+			size = detail::calculateSizeInCharacters(str);
+
+			// Don't need to do anything else for ASCII.
+			// @warning don't use isASCII() here, 
+			// as we didn't correct average size
+			if (size == SizeType(str.size())) { return; }
+
+			averageCharacterSize = std::round(double(str.size()) / size);
+
+			/// TODO: construct blocks
+		}
 	};
 
-	/// Metadata about string layout
-	mutable Layout layout;
+	/// Metadata about string layout. 
+	/// @warning don't use it directly, as it may not be evaluated. 
+	/// Use getter layout() instead
+	mutable Layout _layout;
+
+	/// Check that layout is evaluated, without evaluatiation
+	bool layoutIsEvaluated() const noexcept
+	{
+		return _layout.isEvaluated();
+	}
+
+	/// Get layout of string
+	[[nodiscard("Possibly expensive O(n) operation")]]
+	Layout & layout() const noexcept
+	{
+		if (not _layout.isEvaluated())
+		{
+			_layout.evaluateFor(bytes);
+		}
+		return _layout;
+	}
 };
 
 } // namespace unicode

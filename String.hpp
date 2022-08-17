@@ -76,6 +76,7 @@ public:
 	String(std::nullptr_t) = delete;
 
 	/// Does string contain only ASCII characters?
+	[[nodiscard("Possibly expensive O(n) operation")]]
 	bool isASCII() const noexcept 
 	{ 
 		if (not layout.isEvaluated())
@@ -90,11 +91,16 @@ public:
 	bool isEmpty() const noexcept { return bytes.empty(); }
 
 	/// Get size of string in characters
+	[[nodiscard("Possibly expensive O(n) operation")]]
 	SizeType size() const noexcept 
 	{ 
-		/// TODO: implement real size
 		/// TODO: SizeRequest helper, that will lazily calculate size
-		return bytes.size();
+		if (not layout.isEvaluated())
+		{
+			/// TODO: evaluate layout
+			assert(false && "not implemented");
+		}
+		return layout.size;
 	}
 
 	operator const std::string &() const noexcept { return bytes; }

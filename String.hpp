@@ -4,12 +4,72 @@
 #include <string_view>
 #include <iosfwd>
 #include <set>
+#include <memory>
 
 #include <unicode/utext.h>
 #include <unicode/brkiter.h>
 
 namespace unicode
 {
+
+/// Helpers that deal with unicode
+namespace detail
+{
+
+/// Get character break iterator at the beginning of openned unicode text 
+std::unique_ptr<icu::BreakIterator> 
+getCharacterBreakIterator(UText *utext) noexcept
+{
+	UErrorCode errorCode = U_ZERO_ERROR;
+	std::unique_ptr<icu::BreakIterator> it {
+		icu::BreakIterator::createCharacterInstance(
+			icu::Locale::getDefault(), 
+			errorCode
+		)
+	};
+	if (U_FAILURE(errorCode))
+	{
+		return nullptr;
+	}
+
+	errorCode = U_ZERO_ERROR;
+	it->setText(utext, errorCode);
+	if (U_FAILURE(errorCode))
+	{
+		return nullptr;
+	}
+	return it;
+}
+
+/// Calculate size of utf-8 string in characters
+int32_t calculateSizeInCharacters(std::string_view text) noexcept
+{
+	if (text.empty()) { return 0; }
+	if (text.size() == 1) { return 1; }
+
+	UErrorCode errorCode = U_ZERO_ERROR;
+	UText utext = UTEXT_INITIALIZER;
+	utext_openUTF8(&utext, text.data(), text.size(), &errorCode);
+	if (U_FAILURE(errorCode)) {	return -1; }
+
+	auto it = getCharacterBreakIterator(&utext);
+
+	int32_t size = 0;
+	for (
+		int32_t end = it->next(); 
+		end != icu::BreakIterator::DONE; 
+		end = it->next()
+	)
+	{
+		++size;
+	}
+
+	utext_close(&utext);
+
+	return size;
+}
+
+} // namespace detail
 
 /// Structure to differentiate between char and count in repeat function
 struct Times { int32_t count; };

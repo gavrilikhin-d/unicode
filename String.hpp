@@ -59,7 +59,7 @@ UText openUText(std::string_view str) noexcept
 }
 
 /// Calculate size of utf-8 string in characters
-int32_t calculateSizeInCharacters(std::string_view text) noexcept
+uint32_t calculateSizeInCharacters(std::string_view text) noexcept
 {
 	if (text.empty()) { return 0; }
 	if (text.size() == 1) { return 1; }
@@ -68,7 +68,7 @@ int32_t calculateSizeInCharacters(std::string_view text) noexcept
 
 	auto it = getCharacterBreakIterator(&utext);
 
-	int32_t size = 0;
+	uint32_t size = 0;
 	for (
 		int32_t end = it->next(); 
 		end != icu::BreakIterator::DONE; 
@@ -362,18 +362,22 @@ private:
 		{
 			assert(str.size() <= String::maxSize() && "String is too big");
 
-			Layout layout;
-
-			layout.averageCharacterSize = 1;
-			layout.size = detail::calculateSizeInCharacters(str);
+			auto size = detail::calculateSizeInCharacters(str);
 
 			// Don't need to do anything else for ASCII.
-			// @warning don't use isASCII() here, 
-			// as we didn't correct average size
-			if (layout.size == SizeType(str.size())) { return layout; }
+			if (size == SizeType(str.size())) 
+			{ 
+				return Layout{
+					.averageCharacterSize = 1, 
+					.size = size
+				}; 
+			}
 
-			layout.averageCharacterSize = 
-				std::round(double(str.size()) / layout.size);
+			Layout layout{
+				.averageCharacterSize = 
+					ByteSize(std::round(double(str.size()) / size)),
+				.size = size
+			};
 
 			auto utext = detail::openUText(str);
 			auto it = detail::getCharacterBreakIterator(&utext);
@@ -436,19 +440,25 @@ private:
 		}
 
 
+		/// Get iterator to block that contains character or just before it
+		auto getNearestLeftBlock(CharacterIndex index) const noexcept
+		{
+			auto block = blocks.upper_bound(index);
+			if (block == blocks.begin()) { return blocks.rend(); }
+			return std::make_reverse_iterator(block);
+		}
 
 		/// Get size of character in bytes
 		ByteSize getCharacterSize(CharacterIndex index) const noexcept
 		{
 			assert(isEvaluated() && "layout is not evaluated");
 
-			auto block = blocks.upper_bound(index);
-			if (block == blocks.begin()) { return averageCharacterSize; }
-
-			--block;
-
-			if (block->containsCharacterIndex(index))
-			{
+			auto block = getNearestLeftBlock(index);
+			if (
+				block != blocks.rend() && 
+				block->containsCharacterIndex(index)
+			) 
+			{ 
 				return block->characterSize();
 			}
 			return averageCharacterSize;
@@ -477,9 +487,9 @@ private:
 		) const noexcept
 		{
 			assert(isEvaluated() && "layout is not evaluated");
-			auto end = blocks.upper_bound(index);
 			return std::accumulate(
-				blocks.begin(), end, ByteDifference(0), 
+				blocks.begin(), getNearestLeftBlock(index).base(),
+				ByteDifference(0), 
 				[this, index](ByteDifference diff, const Block &block)
 				{
 					return diff + 

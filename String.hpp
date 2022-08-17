@@ -358,24 +358,27 @@ private:
 		}
 		
 		/// Evaluate layout for utf-8 string
-		void evaluateFor(std::string_view str) noexcept
+		static Layout getFor(std::string_view str) noexcept
 		{
 			assert(str.size() <= String::maxSize() && "String is too big");
 
-			averageCharacterSize = 1;
-			size = detail::calculateSizeInCharacters(str);
+			Layout layout;
+
+			layout.averageCharacterSize = 1;
+			layout.size = detail::calculateSizeInCharacters(str);
 
 			// Don't need to do anything else for ASCII.
 			// @warning don't use isASCII() here, 
 			// as we didn't correct average size
-			if (size == SizeType(str.size())) { return; }
+			if (layout.size == SizeType(str.size())) { return layout; }
 
-			averageCharacterSize = std::round(double(str.size()) / size);
+			layout.averageCharacterSize = 
+				std::round(double(str.size()) / layout.size);
 
 			auto utext = detail::openUText(str);
 			auto it = detail::getCharacterBreakIterator(&utext);
 
-			ByteSize previousCharacterSize = averageCharacterSize;
+			ByteSize previousCharacterSize = layout.averageCharacterSize;
 			std::optional<Block> currentBlock;
 			for (
 				auto start = it->first(), end = it->next(), characterIndex = 0; 
@@ -388,7 +391,7 @@ private:
 				if (characterByteSize == previousCharacterSize)
 				{
 					// Character size is the same as average
-					if (previousCharacterSize == averageCharacterSize)
+					if (previousCharacterSize == layout.averageCharacterSize)
 					{
 						continue;
 					}
@@ -411,7 +414,7 @@ private:
 				// Add previous block to set
 				if (currentBlock)
 				{
-					blocks.insert(std::move(*currentBlock));
+					layout.blocks.insert(std::move(*currentBlock));
 				}
 
 				// New block needed
@@ -424,10 +427,12 @@ private:
 			// Add last block to set
 			if (currentBlock) 
 			{ 
-				blocks.insert(std::move(*currentBlock)); 
+				layout.blocks.insert(std::move(*currentBlock)); 
 			}
 
 			utext_close(&utext);
+
+			return layout;
 		}
 
 
@@ -515,7 +520,7 @@ private:
 	{
 		if (not _layout.isEvaluated())
 		{
-			_layout.evaluateFor(bytes);
+			_layout = Layout::getFor(bytes);
 		}
 		return _layout;
 	}

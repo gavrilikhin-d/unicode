@@ -42,27 +42,29 @@ public:
 		return std::numeric_limits<SizeType>::max();
 	}
 
-	/// Get ASCII character
-	static String repeat(char c, Times times) noexcept
+	/// Create unicode string from string with only ASCII characters.
+	/// @warning No validation is performed.
+	static String fromASCII(std::string ascii) noexcept
 	{
-		String str(std::string(times.count, c));
-		/// TODO: optimization, as we know this is ASCII
+		String str(std::move(ascii));
+		str.layout.size = ascii.size();
+		str.layout.averageCharacterSize = 1;
 		return str;
 	}
 
-	/// Create empty string
-	String() noexcept = default;
-	/// Create string from ASCII character
-	String(char c) noexcept : bytes({c}) 
+	/// Get ASCII character
+	static String repeat(char c, Times times) noexcept
 	{
-		/// TODO: optimization, as we know this is ASCII
+		return String::fromASCII(std::string(times.count, c));
 	}
+
+	/// Create empty string
+	String() noexcept : layout(Layout{.averageCharacterSize = 1, .size = 0}) {}
+	/// Create string from ASCII character
+	String(char c) noexcept : String(String::fromASCII(std::string(1, c))) {}
 	/// Create string from ASCII characters
 	String(std::initializer_list<char> chars) noexcept 
-		: bytes(std::move(chars)) 
-	{
-		/// TODO: optimization, as we know this is ASCII
-	}
+		: String(String::fromASCII(std::string(chars))) {}
 	/// Create string from UTF-8 encoded characters
 	String(const char *str) : bytes(str) {}
 	/// Create string from UTF-8 encoded characters
@@ -73,9 +75,19 @@ public:
 	/// Don't create string from nullptr
 	String(std::nullptr_t) = delete;
 
+	/// Does string contain only ASCII characters?
+	bool isASCII() const noexcept 
+	{ 
+		if (not layout.isEvaluated())
+		{
+			/// TODO: evaluate layout
+			assert(false && "not implemented");
+		}
+		return layout.averageCharacterSize == 1 && layout.blocks.empty(); 
+	}
+
 	/// Is string empty?
 	bool isEmpty() const noexcept { return bytes.empty(); }
-
 
 	/// Get size of string in characters
 	SizeType size() const noexcept 
@@ -152,6 +164,12 @@ private:
 		/// Set of character sequences where size differs from average.
 		/// Sorted by first character index
 		std::set<Block, std::less<>> blocks;
+
+		/// Is layout evaluated?
+		constexpr bool isEvaluated() const noexcept
+		{
+			return averageCharacterSize != NOT_EVALUATED;
+		}
 	};
 
 	/// Metadata about string layout

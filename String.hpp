@@ -182,8 +182,7 @@ public:
 	{
 		/// TODO: add optimization for some small indexes
 		assert(index >= 0 || SizeType(-index) <= size() && "out of range");
-		assert(SizeType(index) < size() && "out of range");
-		assert(SizeType(index) <= maxSize() && "Index is too big");
+		assert(index <= 0 || SizeType(index) < size() && "out of range");
 
 		// Convert negative index to positive
 		if (index < 0) 

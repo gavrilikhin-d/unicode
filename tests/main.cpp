@@ -74,6 +74,23 @@ int main()
 				assert(false);
 			}
 		}
+
+		for (
+			auto start = it->first(), end = it->next(), characterIndex = 0;
+			end != icu::BreakIterator::DONE;
+			start = end, end = it->next(), ++characterIndex
+		)
+		{
+			auto c = hello[
+				-String::CharacterIndex(hello.size()) + characterIndex
+			];
+			if (c != str.substr(start, end - start))
+			{
+				std::cerr 
+					<< "Wrong character at " << characterIndex << ": " << c;
+				assert(false);
+			}
+		}
 		utext_close(&utext);
 	}
 

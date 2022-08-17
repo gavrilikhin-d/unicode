@@ -5,6 +5,8 @@
 #include <iosfwd>
 #include <set>
 
+#include <unicode/utext.h>
+
 namespace unicode
 {
 

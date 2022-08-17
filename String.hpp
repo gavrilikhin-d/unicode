@@ -345,7 +345,7 @@ private:
 				}
 
 				// New block needed
-				currentBlock = Block{};
+				currentBlock = Block{.firstCharacter = characterIndex};
 				currentBlock->setCharacterSize(characterByteSize);
 
 				previousCharacterSize = characterByteSize;

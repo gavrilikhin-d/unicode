@@ -6,6 +6,8 @@
 #include <set>
 #include <memory>
 #include <cmath>
+#include <cassert>
+#include <optional>
 
 #include <unicode/utext.h>
 #include <unicode/brkiter.h>
@@ -42,16 +44,26 @@ getCharacterBreakIterator(UText *utext) noexcept
 	return it;
 }
 
+/// Open utf-8 string as unicode text
+UText openUText(std::string_view str) noexcept
+{
+	UErrorCode errorCode = U_ZERO_ERROR;
+	UText utext = UTEXT_INITIALIZER;
+	utext_openUTF8(&utext, str.data(), str.size(), &errorCode);
+	if (U_FAILURE(errorCode))
+	{
+		return UTEXT_INITIALIZER;
+	}
+	return utext;
+}
+
 /// Calculate size of utf-8 string in characters
 int32_t calculateSizeInCharacters(std::string_view text) noexcept
 {
 	if (text.empty()) { return 0; }
 	if (text.size() == 1) { return 1; }
 
-	UErrorCode errorCode = U_ZERO_ERROR;
-	UText utext = UTEXT_INITIALIZER;
-	utext_openUTF8(&utext, text.data(), text.size(), &errorCode);
-	if (U_FAILURE(errorCode)) {	return -1; }
+	auto utext = openUText(text);
 
 	auto it = getCharacterBreakIterator(&utext);
 
@@ -206,6 +218,45 @@ private:
 			/// it will be sum of byte differences from previous blocks
 			/// ByteDifference firstByteDifference = 0;
 
+			/// Get size of character in bytes
+			constexpr ByteSize characterSize() const noexcept
+			{
+				return characterSizeMinusOne + 1;
+			}
+
+			/// Set character size in bytes
+			constexpr void setCharacterSize(ByteSize size) noexcept
+			{
+				assert(size > 0 && size <= 16 && "invalid character size");
+				characterSizeMinusOne = size - 1;
+			}
+
+			/// Get count of characters in block
+			constexpr SizeType charactersCount() const noexcept
+			{
+				return charactersCountMinusOne + 1;
+			}
+
+			/// Set character count in block
+			constexpr void setCharactersCount(SizeType count) noexcept
+			{
+				assert(count > 0 && count <= 16 && "invalid character count");
+				charactersCountMinusOne = count - 1;
+			}
+
+			/// Increment characters count
+			constexpr void incrementCharactersCount() noexcept
+			{
+				assert(not isFull() && "block is full");
+				++charactersCountMinusOne;
+			}
+
+			/// Is block full?
+			constexpr bool isFull() const noexcept
+			{
+				return charactersCount() == 16;
+			}
+
 			/// Sort blocks by first character index
 			constexpr bool operator<(const Block &other) const noexcept
 			{
@@ -251,7 +302,62 @@ private:
 
 			averageCharacterSize = std::round(double(str.size()) / size);
 
-			/// TODO: construct blocks
+			auto utext = detail::openUText(str);
+			auto it = detail::getCharacterBreakIterator(&utext);
+
+			ByteSize previousCharacterSize = averageCharacterSize;
+			std::optional<Block> currentBlock;
+			for (
+				auto start = it->first(), end = it->next(), characterIndex = 0; 
+				end != icu::BreakIterator::DONE; 
+				start = end, end = it->next(), ++characterIndex)
+			{
+				ByteSize characterByteSize = end - start;
+
+				// This character may be part of block
+				if (characterByteSize == previousCharacterSize)
+				{
+					// Character size is the same as average
+					if (previousCharacterSize == averageCharacterSize)
+					{
+						continue;
+					}
+
+					assert(
+						currentBlock.has_value() && 
+						"current block is not set"
+					);
+
+					// Add character to block, if it's not full
+					if (not currentBlock->isFull())
+					{
+						currentBlock->incrementCharactersCount();
+						continue;
+					}
+
+					// block is full -> falthrough to creating new block
+				}
+
+				// Add previous block to set
+				if (currentBlock)
+				{
+					blocks.insert(std::move(*currentBlock));
+				}
+
+				// New block needed
+				currentBlock = Block{};
+				currentBlock->setCharacterSize(characterByteSize);
+
+				previousCharacterSize = characterByteSize;
+			}
+
+			// Add last block to set
+			if (currentBlock) 
+			{ 
+				blocks.insert(std::move(*currentBlock)); 
+			}
+
+			utext_close(&utext);
 		}
 	};
 

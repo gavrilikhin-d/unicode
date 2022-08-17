@@ -6,6 +6,7 @@
 #include <set>
 
 #include <unicode/utext.h>
+#include <unicode/brkiter.h>
 
 namespace unicode
 {

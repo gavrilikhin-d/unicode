@@ -33,7 +33,11 @@ endif()
 set(CMAKE_DISABLE_IN_SOURCE_BUILD YES)
 
 # ICU dependency
-find_package(ICU COMPONENTS uc REQUIRED)
+find_package(ICU 70 COMPONENTS uc REQUIRED)
+while (NOT EXISTS ${ICU_INCLUDE_DIRS}/unicode/brkiter.h)
+	# TODO: fallback to other package
+	message(FATAL_ERROR "ICU include directory doesn't contain brkiter.h")
+endwhile()
 
 add_library(String INTERFACE)
 # default member initializer for bit-field is a C++20 extension

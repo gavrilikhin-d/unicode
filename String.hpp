@@ -180,6 +180,18 @@ public:
 	[[nodiscard("Possibly expensive O(n) operation")]]
 	Character operator[](CharacterIndex index) const noexcept
 	{
+		index = absoluteIndex(index);
+
+		auto characterSize = layout().getCharacterSize(index);
+		auto firstByteIndex = layout().getFirstByteIndexForCharacter(index);
+		return Character{bytes.data() + firstByteIndex, characterSize};
+	}
+
+	/// Convert maybe negative index to positive index from the beginning
+	[[nodiscard("Possibly expensive O(n) operation")]]
+	CharacterIndex absoluteIndex(CharacterIndex relative) const noexcept
+	{
+		auto index = relative;
 		/// TODO: add optimization for some small indexes
 		assert(index >= 0 || SizeType(-index) <= size() && "out of range");
 		assert(index <= 0 || SizeType(index) < size() && "out of range");
@@ -189,10 +201,27 @@ public:
 		{ 
 			index += CharacterIndex(size()); 
 		}
+		return index;
+	}
 
-		auto characterSize = layout().getCharacterSize(index);
-		auto firstByteIndex = layout().getFirstByteIndexForCharacter(index);
-		return Character{bytes.data() + firstByteIndex, characterSize};
+	/// Append  utf-8 string to the end of this string
+	String &operator+=(std::string_view str)
+	{
+		// Appended string is bigger
+		if (bytes.size() <= str.size())
+		{
+			// just clear layout information to reevaluate later
+			_layout = Layout{};
+		}
+		bytes += str;
+		
+		if (not isEmpty() && layoutIsEvaluated())
+		{
+			/// TODO: reevaluate layout
+			_layout = Layout{};
+		}
+		
+		return *this;
 	}
 
 	friend std::ostream &operator<<(std::ostream &os, const String &str)

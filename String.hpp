@@ -92,11 +92,12 @@ struct Times { uint32_t count; };
  *	 Unicode string - collection of user-percieved characters,
  * 	 which may be represented with multiple Unicode code points.
  * 
- *   TODO: change to template<typename Container> CharacterView
+ *   TODO: requirements for the container and readonly version
  * 
  *   TODO: determine underlying UTF-8, UTF-16 or UTF-32 encoding on the fly
  */
-class String
+template<typename Storage = std::string>
+class BasicString
 {
 public:
 	/// Type of string size in characters.
@@ -123,9 +124,9 @@ public:
 
 	/// Create unicode string from string with only ASCII characters.
 	/// @warning No validation is performed.
-	static String fromASCII(std::string ascii) noexcept
+	static BasicString fromASCII(std::string ascii) noexcept
 	{
-		String str;
+		BasicString str;
 		str._layout.size = ascii.size();
 		str._layout.averageCharacterSize = 1;
 		str.bytes = std::move(ascii);
@@ -133,27 +134,27 @@ public:
 	}
 
 	/// Get ASCII character
-	static String repeat(char c, Times times) noexcept
+	static BasicString repeat(char c, Times times) noexcept
 	{
-		return String::fromASCII(std::string(times.count, c));
+		return BasicString::fromASCII(std::string(times.count, c));
 	}
 
 	/// Create empty string
-	String() noexcept : _layout(Layout{.averageCharacterSize = 1, .size = 0}) {}
+	BasicString() noexcept : _layout(Layout{.averageCharacterSize = 1, .size = 0}) {}
 	/// Create string from ASCII character
-	String(char c) noexcept : String(String::fromASCII(std::string(1, c))) {}
+	BasicString(char c) noexcept : BasicString(BasicString::fromASCII(std::string(1, c))) {}
 	/// Create string from ASCII characters
-	String(std::initializer_list<char> chars) noexcept 
-		: String(String::fromASCII(std::string(chars))) {}
+	BasicString(std::initializer_list<char> chars) noexcept 
+		: BasicString(BasicString::fromASCII(std::string(chars))) {}
 	/// Create string from UTF-8 encoded characters
-	String(const char *str) : bytes(str) {}
+	BasicString(const char *str) : bytes(str) {}
 	/// Create string from UTF-8 encoded characters
-	String(std::string_view view) : bytes(view) {}
+	BasicString(std::string_view view) : bytes(view) {}
 	/// Create unicode string from utf-8 encoded string
-	String(std::string str) noexcept : bytes(std::move(str)) {}
+	BasicString(std::string str) noexcept : bytes(std::move(str)) {}
 
 	/// Don't create string from nullptr
-	String(std::nullptr_t) = delete;
+	BasicString(std::nullptr_t) = delete;
 
 	/// Does string contain only ASCII characters?
 	[[nodiscard("Possibly expensive O(n) operation")]]
@@ -205,7 +206,7 @@ public:
 	}
 
 	/// Append  utf-8 string to the end of this string
-	String &operator+=(std::string_view str)
+	BasicString &operator+=(std::string_view str)
 	{
 		// Appended string is bigger
 		if (bytes.size() <= str.size())
@@ -224,18 +225,18 @@ public:
 		return *this;
 	}
 
-	friend std::ostream &operator<<(std::ostream &os, const String &str)
+	friend std::ostream &operator<<(std::ostream &os, const BasicString &str)
 	{
 		return os << str.bytes;
 	}
 
-	friend std::istream &operator>>(std::istream &is, String &str)
+	friend std::istream &operator>>(std::istream &is, BasicString &str)
 	{
 		return is >> str.bytes;
 	}
 private:
 	/// UTF-8 encoded content of string
-	std::string bytes;
+	Storage bytes;
 
 	/// Metadata about string layout
 	struct Layout
@@ -360,7 +361,7 @@ private:
 		/// Evaluate layout for utf-8 string
 		static Layout getFor(std::string_view str) noexcept
 		{
-			assert(str.size() <= String::maxSize() && "String is too big");
+			assert(str.size() <= BasicString::maxSize() && "String is too big");
 
 			auto size = detail::calculateSizeInCharacters(str);
 
@@ -535,5 +536,8 @@ private:
 		return _layout;
 	}
 };
+
+/// Alias for default string
+using String = BasicString<>;
 
 } // namespace unicode

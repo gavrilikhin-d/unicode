@@ -534,9 +534,36 @@ private:
 		{
 			assert(isEvaluated() && "layout is not evaluated");
 
+			auto size = averageCharacterSize;
+
+			auto end = getNearestLeftBlock(characterIndex);
+			auto diff = std::accumulate(
+				blocks.begin(), end.base(),
+				ByteDifference(0), 
+				[this](ByteDifference diff, const Block &block)
+				{
+					return diff + 
+						characterSizeDifference(block) * 
+						block.charactersCount();
+				}
+			);
+			if (
+				end != blocks.rend() && 
+				end->containsCharacterIndex(characterIndex))
+			{
+				diff -= 
+					characterSizeDifference(*end) * 
+					(
+						end->firstCharacter + 
+						end->charactersCount() - 
+						characterIndex
+					);
+				size = end->characterSize();
+			}
+
 			return ByteIndexAndSize{
-				.index = getFirstByteIndexForCharacter(characterIndex),
-				.size = getCharacterSize(characterIndex)
+				.index = estimateFirstByteIndex(characterIndex) + diff,
+				.size = size
 			};
 		}
 	};

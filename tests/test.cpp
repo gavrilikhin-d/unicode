@@ -1,6 +1,7 @@
 #include "String.hpp"
 
 #include <iostream>
+#include <fstream>
 
 #include <gtest/gtest.h>
 
@@ -92,4 +93,70 @@ TEST(UTF8, reverseIteration)
 		EXPECT_EQ(c, substr);
 	}
 	utext_close(&utext);
+}
+
+/// Read whole file content
+static std::string readFile(const std::string &path)
+{
+	std::ifstream file(path);
+	assert(file && "Can't open file");
+	std::string content((std::istreambuf_iterator<char>(file)),
+		(std::istreambuf_iterator<char>()));
+	return content;
+}
+
+TEST(English, wiki)
+{
+	auto content = readFile("../../data/english/wiki.txt");
+	String unicode = content;
+	EXPECT_FALSE(unicode.isEmpty());
+	EXPECT_TRUE(areEqual(unicode, content));
+}
+
+TEST(Russian, wiki)
+{
+	auto content = readFile("../../data/russian/wiki.txt");
+	String unicode = content;
+	EXPECT_FALSE(unicode.isEmpty());
+	EXPECT_TRUE(areEqual(unicode, content));
+}
+
+TEST(Chinese, wiki)
+{
+	auto content = readFile("../../data/chinese/wiki.txt");
+	String unicode = content;
+	EXPECT_FALSE(unicode.isEmpty());
+	EXPECT_TRUE(areEqual(unicode, content));
+}
+
+TEST(French, wiki)
+{
+	auto content = readFile("../../data/french/wiki.txt");
+	String unicode = content;
+	EXPECT_FALSE(unicode.isEmpty());
+	EXPECT_TRUE(areEqual(unicode, content));
+}
+
+TEST(German, wiki)
+{
+	auto content = readFile("../../data/german/wiki.txt");
+	String unicode = content;
+	EXPECT_FALSE(unicode.isEmpty());
+	EXPECT_TRUE(areEqual(unicode, content));
+}
+
+TEST(Japanese, wiki)
+{
+	auto content = readFile("../../data/japanese/wiki.txt");
+	String unicode = content;
+	EXPECT_FALSE(unicode.isEmpty());
+	EXPECT_TRUE(areEqual(unicode, content));
+}
+
+TEST(Korean, wiki)
+{
+	auto content = readFile("../../data/korean/wiki.txt");
+	String unicode = content;
+	EXPECT_FALSE(unicode.isEmpty());
+	EXPECT_TRUE(areEqual(unicode, content));
 }

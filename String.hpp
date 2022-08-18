@@ -106,11 +106,13 @@ public:
 	///  Is less than @c size_t because of: 
 	///	 	* @c BreakIterator limitations
 	///     * @c Block memory efficiency
-	///     * Why would you need more than 2 GiB of contignuous text data?
+	///     * Why would you need contignuous strings that big?
 	using SizeType = uint32_t;
 
 	/// Type for index of Character
-	using CharacterIndex = int32_t;
+	using CharacterIndex = uint32_t;
+	/// Relative character index
+	using RelativeCharacterIndex = int32_t;
 
 	/// Character inside of string
 	/// TODO: special class, that may be used to modify string
@@ -119,7 +121,7 @@ public:
 	/// Get maximum number of characters in string
 	static constexpr SizeType maxSize() noexcept 
 	{
-		return SizeType(std::numeric_limits<CharacterIndex>::max());
+		return SizeType(std::numeric_limits<int32_t>::max());
 	}
 
 	/// Create unicode string from string with only ASCII characters.
@@ -179,30 +181,49 @@ public:
 	operator std::string_view() const noexcept { return bytes; }
 
 	/// Get character by index. Negative index is counted from the end.
+	template<std::unsigned_integral PositiveIndex>
 	[[nodiscard("Possibly expensive O(n) operation")]]
-	Character operator[](CharacterIndex index) const noexcept
+	Character operator[](PositiveIndex index) const noexcept
 	{
-		index = absoluteIndex(index);
-
+		assert(index < size() && "out of bounds");
 		auto [byteIndex, size] = layout().getCharacterByteIndexAndSize(index);
 		return Character{bytes.data() + byteIndex, size};
 	}
 
-	/// Convert maybe negative index to positive index from the beginning
+	// Get character by index. Negative index is counted from the end.
+	template<std::signed_integral NegativeIndex>
 	[[nodiscard("Possibly expensive O(n) operation")]]
-	CharacterIndex absoluteIndex(CharacterIndex relative) const noexcept
+	Character operator[](NegativeIndex index) const noexcept
 	{
-		auto index = relative;
-		/// TODO: add optimization for some small indexes
-		assert(index >= 0 || SizeType(-index) <= size() && "out of range");
-		assert(index <= 0 || SizeType(index) < size() && "out of range");
-
-		// Convert negative index to positive
-		if (index < 0) 
-		{ 
-			index += CharacterIndex(size()); 
+		CharacterIndex characterIndex = index;
+		if (index < 0)
+		{
+			characterIndex = absoluteIndex(index);
 		}
-		return index;
+		return (*this)[characterIndex];
+	}
+
+	/// Convert relative index from end to absolute
+	[[nodiscard("Possibly expensive O(n) operation")]]
+	CharacterIndex absoluteIndex(RelativeCharacterIndex relative) const noexcept
+	{
+		assert(relative <= 0 && "Past end index");
+		assert(SizeType(-relative) <= size() && "out of range");
+		return RelativeCharacterIndex(size()) + relative;
+	}
+
+	/// Convert relative to some position index to absolute
+	CharacterIndex absoluteIndex(
+		RelativeCharacterIndex relative, 
+		CharacterIndex start
+	) const noexcept
+	{
+		assert(
+			relative >= 0 || start >= CharacterIndex(-relative) && 
+			"index below zero"
+		);
+		assert(relative <= 0 || start + relative <= size() && "past end index");
+		return start + relative;
 	}
 
 	/// Append  utf-8 string to the end of this string
@@ -387,8 +408,9 @@ private:
 
 			ByteSize previousCharacterSize = layout.averageCharacterSize;
 			std::optional<Block> currentBlock;
+			CharacterIndex characterIndex = 0;
 			for (
-				auto start = it->first(), end = it->next(), characterIndex = 0; 
+				auto start = it->first(), end = it->next();
 				end != icu::BreakIterator::DONE; 
 				start = end, end = it->next(), ++characterIndex)
 			{

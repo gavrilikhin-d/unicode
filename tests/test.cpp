@@ -61,7 +61,7 @@ TEST(UTF8, hello)
 	)
 	{
 		auto c = hello[
-			-String::CharacterIndex(hello.size()) + characterIndex
+			-String::RelativeCharacterIndex(hello.size()) + characterIndex
 		];
 		auto substr = str.substr(start, end - start);
 		EXPECT_EQ(c, substr);

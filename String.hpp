@@ -209,9 +209,7 @@ public:
 	[[nodiscard("Possibly expensive O(n) operation")]]
 	CharacterIndex absoluteIndex(RelativeCharacterIndex relative) const noexcept
 	{
-		assert(relative <= 0 && "Past end index");
-		assert(SizeType(-relative) <= size() && "out of range");
-		return RelativeCharacterIndex(size()) + relative;
+		return absoluteIndex(relative, size());
 	}
 
 	/// Convert relative to some position index to absolute

@@ -3,24 +3,59 @@
 #include <string>
 #include <fstream>
 #include <memory>
+#include <random>
 
 #include <unicode/unistr.h>
 #include <unicode/brkiter.h>
 
 #include "String.hpp"
 
-/// Random access to english string with std::string
-static void englishWithSTD(benchmark::State& state) 
+/// Get content of a file
+static std::string getFileContent(const std::string& filename)
 {
-	std::ifstream file("data/english/wiki.txt");
-
-	std::string ascii{
+	std::ifstream file(filename);
+	assert(file && "file not found");
+	return std::string{
 		std::istream_iterator<char>(file), 
 		std::istream_iterator<char>()
 	};
+}
+
+/// Get english text
+static const std::string &getASCII()
+{
+	static const std::string content = getFileContent("data/english/wiki.txt");
+	return content;
+}
+
+/// Shuffle indexes of a string with specified size
+static std::vector<size_t> shuffleIndexes(size_t size)
+{
+	std::vector<size_t> indexes(size);
+	std::iota(indexes.begin(), indexes.end(), 0);
+
+	std::random_device rd;
+	std::shuffle(indexes.begin(), indexes.end(), std::default_random_engine{});
+	return indexes;
+}
+
+/// Get indexes in string
+static const std::vector<size_t> &getIndexes()
+{
+	static const std::vector<size_t> indexes = shuffleIndexes(
+		getASCII().size()
+	);
+	return indexes;
+}
+
+/// Random access to english string with std::string
+static void englishWithSTD(benchmark::State& state) 
+{
+	auto &ascii = getASCII();
+	auto &indexes = getIndexes();
 	for (auto _ : state)
 	{
-		auto c = ascii[std::rand() % ascii.size()];
+		auto c = ascii[indexes[state.iterations() % indexes.size()]];
 		benchmark::DoNotOptimize(c);
 	}
 }
@@ -29,18 +64,13 @@ BENCHMARK(englishWithSTD);
 /// Random access to english string with icu::UnicodeString
 static void englishWithICUUnicodeString(benchmark::State& state) 
 {
-	std::ifstream file("data/english/wiki.txt");
-
-	std::string ascii{
-		std::istream_iterator<char>(file), 
-		std::istream_iterator<char>()
-	};
-
+	auto &ascii = getASCII();
+	auto &indexes = getIndexes();
 	icu::UnicodeString str = icu::UnicodeString::fromUTF8(ascii);
 
 	for (auto _ : state)
 	{
-		auto c = str[std::rand() % str.length()];
+		auto c = str[indexes[state.iterations() % indexes.size()]];
 		benchmark::DoNotOptimize(c);
 	}
 }
@@ -49,12 +79,8 @@ BENCHMARK(englishWithICUUnicodeString);
 /// Random access to english string with icu::BreakIterator
 static void englishWithICUBreakIterator(benchmark::State& state) 
 {
-	std::ifstream file("data/english/wiki.txt");
-
-	std::string ascii{
-		std::istream_iterator<char>(file), 
-		std::istream_iterator<char>()
-	};
+	auto &ascii = getASCII();
+	auto &indexes = getIndexes();
 
 	auto utext = unicode::detail::openUText(ascii);
 	auto it = unicode::detail::getCharacterBreakIterator(&utext);
@@ -62,7 +88,7 @@ static void englishWithICUBreakIterator(benchmark::State& state)
 	for (auto _ : state)
 	{
 		it->first();
-		size_t index = std::rand() % ascii.size();
+		size_t index = indexes[state.iterations() % indexes.size()];
 		for (size_t i = 0; i < index; ++i)
 		{
 			it->next();
@@ -78,18 +104,14 @@ BENCHMARK(englishWithICUBreakIterator);
 /// Random access to english string with my own implementation
 static void englishWithMyString(benchmark::State& state) 
 {
-	std::ifstream file("data/english/wiki.txt");
-
-	std::string ascii{
-		std::istream_iterator<char>(file), 
-		std::istream_iterator<char>()
-	};
+	auto &ascii = getASCII();
+	auto &indexes = getIndexes();
 
 	unicode::String str = unicode::String::fromASCII(ascii);
 
 	for (auto _ : state)
 	{
-		auto c = str[std::rand() % str.size()];
+		auto c = str[indexes[state.iterations() % indexes.size()]];
 		benchmark::DoNotOptimize(c);
 	}
 }

@@ -124,7 +124,7 @@ public:
 
 	/// Create unicode string from string with only ASCII characters.
 	/// @warning No validation is performed.
-	static BasicString fromASCII(std::string ascii) noexcept
+	static BasicString fromASCII(Storage ascii) noexcept
 	{
 		BasicString str;
 		str._layout.size = ascii.size();
@@ -136,16 +136,17 @@ public:
 	/// Get ASCII character
 	static BasicString repeat(char c, Times times) noexcept
 	{
-		return BasicString::fromASCII(std::string(times.count, c));
+		return BasicString::fromASCII(Storage(times.count, c));
 	}
 
 	/// Create empty string
 	BasicString() noexcept : _layout(Layout{.averageCharacterSize = 1, .size = 0}) {}
 	/// Create string from ASCII character
-	BasicString(char c) noexcept : BasicString(BasicString::fromASCII(std::string(1, c))) {}
+	BasicString(char c) noexcept 
+		: BasicString(BasicString::fromASCII(Storage(1, c))) {}
 	/// Create string from ASCII characters
 	BasicString(std::initializer_list<char> chars) noexcept 
-		: BasicString(BasicString::fromASCII(std::string(chars))) {}
+		: BasicString(BasicString::fromASCII(Storage(chars))) {}
 	/// Create string from UTF-8 encoded characters
 	BasicString(const char *str) : bytes(str) {}
 	/// Create string from UTF-8 encoded characters

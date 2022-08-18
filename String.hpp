@@ -10,6 +10,8 @@
 #include <optional>
 #include <numeric>
 
+#include "SortedVector.hpp"
+
 #include <unicode/utext.h>
 #include <unicode/brkiter.h>
 
@@ -366,7 +368,7 @@ private:
 
 		/// Set of character sequences where size differs from average.
 		/// Sorted by first character index
-		std::set<Block, std::less<>> blocks;
+		SortedVector<Block, std::less<>> blocks;
 
 		/// Is layout evaluated?
 		constexpr bool isEvaluated() const noexcept
@@ -378,7 +380,7 @@ private:
 		constexpr bool isASCII() const noexcept
 		{
 			assert(isEvaluated() && "Layout is not evaluated");
-			return averageCharacterSize == 1 && blocks.empty();
+			return averageCharacterSize == 1 && blocks.isEmpty();
 		}
 		
 		/// Evaluate layout for utf-8 string
@@ -443,7 +445,7 @@ private:
 				// Add previous block to set
 				if (currentBlock)
 				{
-					layout.blocks.insert(std::move(*currentBlock));
+					layout.blocks.push_back(std::move(*currentBlock));
 				}
 
 				// New block needed
@@ -456,7 +458,7 @@ private:
 			// Add last block to set
 			if (currentBlock) 
 			{ 
-				layout.blocks.insert(std::move(*currentBlock)); 
+				layout.blocks.push_back(std::move(*currentBlock)); 
 			}
 
 			utext_close(&utext);
@@ -561,7 +563,7 @@ private:
 			 	.size = averageCharacterSize
 			};
 
-			if (blocks.empty()) { return res; }
+			if (blocks.isEmpty()) { return res; }
 
 			auto end = getNearestLeftBlock(characterIndex);
 			auto diff = std::accumulate(

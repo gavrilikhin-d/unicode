@@ -489,19 +489,23 @@ private:
 		) const noexcept
 		{
 			assert(isEvaluated() && "layout is not evaluated");
-			return std::accumulate(
-				blocks.begin(), getNearestLeftBlock(index).base(),
+			auto end = getNearestLeftBlock(index);
+			auto diff = std::accumulate(
+				blocks.begin(), end.base(),
 				ByteDifference(0), 
-				[this, index](ByteDifference diff, const Block &block)
+				[this](ByteDifference diff, const Block &block)
 				{
 					return diff + 
 						characterSizeDifference(block) * 
-						std::min(
-							block.charactersCount(), 
-							SizeType(index - block.firstCharacter)
-						);
+						block.charactersCount();
 				}
 			);
+			if (end != blocks.rend() && end->containsCharacterIndex(index))
+			{
+				diff -= characterSizeDifference(*end) * 
+					(end->firstCharacter + end->charactersCount() - index);
+			}
+			return diff;
 		}
 
 		/// Get index of first byte for character

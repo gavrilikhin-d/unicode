@@ -188,14 +188,12 @@ public:
 	/// Get iterator to the first element >= than the given element
 	iterator lower_bound(const value_type &value) noexcept 
 	{ 
-		assertSorted();
 		return std::lower_bound(begin(), end(), value, comparator); 
 	}
 
 	/// Get const iterator to the first element >= than the given element
 	const_iterator lower_bound(const value_type &value) const noexcept 
 	{ 
-		assertSorted();
 		return std::lower_bound(begin(), end(), value, comparator); 
 	}
 
@@ -204,7 +202,6 @@ public:
 	requires requires { typename Comparator::is_transparent; }
 	iterator lower_bound(const Key &key) noexcept 
 	{ 
-		assertSorted();
 		return std::lower_bound(begin(), end(), key, comparator); 
 	}
 
@@ -213,21 +210,18 @@ public:
 	requires requires { typename Comparator::is_transparent; }
 	const_iterator lower_bound(const Key &key) const noexcept 
 	{ 
-		assertSorted();
 		return std::lower_bound(begin(), end(), key, comparator); 
 	}
 
 	/// Get an iterator to the first element > than the given key
 	iterator upper_bound(const value_type &value) noexcept 
 	{ 
-		assertSorted();
 		return std::upper_bound(begin(), end(), value, comparator); 
 	}
 
 	/// Get const iterator to the first element > than the given key
 	const_iterator upper_bound(const value_type &value) const noexcept 
 	{ 
-		assertSorted();
 		return std::upper_bound(begin(), end(), value, comparator); 
 	}
 
@@ -236,7 +230,6 @@ public:
 	requires requires { typename Comparator::is_transparent; }
 	iterator upper_bound(const Key &key) noexcept 
 	{ 
-		assertSorted();
 		return std::upper_bound(begin(), end(), key, comparator); 
 	}
 

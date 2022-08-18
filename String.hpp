@@ -209,6 +209,8 @@ public:
 	/// Append  utf-8 string to the end of this string
 	BasicString &operator+=(std::string_view str)
 	{
+		if (str.empty()) { return *this; }
+
 		// Appended string is bigger
 		if (bytes.size() <= str.size())
 		{

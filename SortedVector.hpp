@@ -245,14 +245,12 @@ public:
 	requires requires { typename Comparator::is_transparent; }
 	const_iterator upper_bound(const Key &key) const noexcept 
 	{ 
-		assertSorted();
 		return std::upper_bound(begin(), end(), key, comparator); 
 	}
 
 	/// Get range of elements matching a specific key 
 	std::pair<iterator, iterator> equal_range(const value_type &value) noexcept 
 	{ 
-		assertSorted();
 		return std::equal_range(begin(), end(), value, comparator); 
 	}
 
@@ -261,7 +259,6 @@ public:
 		const value_type &value
 	) const noexcept 
 	{ 
-		assertSorted();
 		return std::equal_range(begin(), end(), value, comparator); 
 	}
 
@@ -270,7 +267,6 @@ public:
 	requires requires { typename Comparator::is_transparent; }
 	std::pair<iterator, iterator> equal_range(const Key &key) noexcept 
 	{ 
-		assertSorted();
 		return std::equal_range(begin(), end(), key, comparator); 
 	}
 
@@ -281,14 +277,12 @@ public:
 		const Key &key
 	) const noexcept 
 	{ 
-		assertSorted();
 		return std::equal_range(begin(), end(), key, comparator); 
 	}
 
 	/// Count the number of elements matching specific key 
 	size_type count(const value_type &value) const noexcept 
 	{ 
-		assertSorted();
 		auto [from, to] = equal_range(value);
 		return std::distance(from, to); 
 	}
@@ -298,7 +292,6 @@ public:
 	requires requires { typename Comparator::is_transparent; }
 	size_type count(const Key &key) const noexcept 
 	{
-		assertSorted();
 		auto [from, to] = equal_range(key);
 		return std::distance(from, to); 
 	}
@@ -340,13 +333,4 @@ public:
 private:
 	/// Comparator for elements
 	Comparator comparator;
-
-	/// Assert that data is sorted
-	void assertSorted() const noexcept
-	{
-		assert(
-			std::is_sorted(begin(), end(), comparator) && 
-			"data is not sorted"
-		);
-	}
 };

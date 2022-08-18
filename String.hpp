@@ -184,9 +184,8 @@ public:
 	{
 		index = absoluteIndex(index);
 
-		auto characterSize = layout().getCharacterSize(index);
-		auto firstByteIndex = layout().getFirstByteIndexForCharacter(index);
-		return Character{bytes.data() + firstByteIndex, characterSize};
+		auto [byteIndex, size] = layout().getCharacterByteIndexAndSize(index);
+		return Character{bytes.data() + byteIndex, size};
 	}
 
 	/// Convert maybe negative index to positive index from the beginning
@@ -514,6 +513,28 @@ private:
 			return 
 				estimateFirstByteIndex(characterIndex) + 
 				byteDifferenceForCharacter(characterIndex);
+		}
+
+		/// Information about character
+		struct ByteIndexAndSize
+		{
+			/// Index of first byte
+			ByteIndex index;
+			/// Size in bytes
+			ByteSize size;
+		};
+
+		/// Get byte index and size for character
+		ByteIndexAndSize getCharacterByteIndexAndSize(
+			CharacterIndex characterIndex
+		) const noexcept
+		{
+			assert(isEvaluated() && "layout is not evaluated");
+
+			return ByteIndexAndSize{
+				.index = getFirstByteIndexForCharacter(characterIndex),
+				.size = getCharacterSize(characterIndex)
+			};
 		}
 	};
 

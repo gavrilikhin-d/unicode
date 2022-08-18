@@ -76,31 +76,6 @@ static void englishWithICUUnicodeString(benchmark::State& state)
 }
 BENCHMARK(englishWithICUUnicodeString);
 
-/// Random access to english string with icu::BreakIterator
-static void englishWithICUBreakIterator(benchmark::State& state) 
-{
-	auto &ascii = getASCII();
-	auto &indexes = getIndexes();
-
-	auto utext = unicode::detail::openUText(ascii);
-	auto it = unicode::detail::getCharacterBreakIterator(&utext);
-
-	for (auto _ : state)
-	{
-		it->first();
-		size_t index = indexes[state.iterations() % indexes.size()];
-		for (size_t i = 0; i < index; ++i)
-		{
-			it->next();
-		}
-		auto c = ascii[it->current()];
-		benchmark::DoNotOptimize(c);
-	}
-
-	utext_close(&utext);
-}
-BENCHMARK(englishWithICUBreakIterator);
-
 /// Random access to english string with my own implementation
 static void englishWithMyString(benchmark::State& state) 
 {

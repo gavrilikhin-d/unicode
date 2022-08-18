@@ -534,7 +534,12 @@ private:
 		{
 			assert(isEvaluated() && "layout is not evaluated");
 
-			auto size = averageCharacterSize;
+			ByteIndexAndSize res{
+				.index = estimateFirstByteIndex(characterIndex),
+			 	.size = averageCharacterSize
+			};
+
+			if (blocks.empty()) { return res; }
 
 			auto end = getNearestLeftBlock(characterIndex);
 			auto diff = std::accumulate(
@@ -558,13 +563,12 @@ private:
 						end->charactersCount() - 
 						characterIndex
 					);
-				size = end->characterSize();
+				res.size = end->characterSize();
 			}
 
-			return ByteIndexAndSize{
-				.index = estimateFirstByteIndex(characterIndex) + diff,
-				.size = size
-			};
+			res.index += diff;
+
+			return res;
 		}
 	};
 

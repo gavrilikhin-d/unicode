@@ -292,6 +292,8 @@ private:
 		{
 			/// Index of the first character in block
 			CharacterIndex firstCharacter = 0;
+			/// Difference from first byte estimation
+			ByteDifference firstByteDifference : 32 = 0;
 			/// Count of characters in block. 
 			/// 0 means 1 character, as block may not be empty
 			SizeType charactersCountMinusOne : 4 = 0;
@@ -364,7 +366,7 @@ private:
 				return firstCharacter <=> index;
 			}
 		};
-		static_assert(sizeof(Block) == 5, "Block is not packed");
+		static_assert(sizeof(Block) == 9, "Block is not packed");
 
 		/// Set of character sequences where size differs from average.
 		/// Sorted by first character index
@@ -411,6 +413,7 @@ private:
 			ByteSize previousCharacterSize = layout.averageCharacterSize;
 			std::optional<Block> currentBlock;
 			CharacterIndex characterIndex = 0;
+			ByteDifference byteDifference = 0;
 			for (
 				auto start = it->first(), end = it->next();
 				end != icu::BreakIterator::DONE; 
@@ -445,11 +448,17 @@ private:
 				// Add previous block to set
 				if (currentBlock)
 				{
+					byteDifference += 
+						currentBlock->charactersCount() * 
+						layout.characterSizeDifference(*currentBlock);
 					layout.blocks.push_back(std::move(*currentBlock));
 				}
 
 				// New block needed
-				currentBlock = Block{.firstCharacter = characterIndex};
+				currentBlock = Block{
+					.firstCharacter = characterIndex,
+					.firstByteDifference = byteDifference
+				};
 				currentBlock->setCharacterSize(characterByteSize);
 
 				previousCharacterSize = characterByteSize;
@@ -566,31 +575,18 @@ private:
 			if (blocks.isEmpty()) { return res; }
 
 			auto end = getNearestLeftBlock(characterIndex);
-			auto diff = std::accumulate(
-				blocks.begin(), end.base(),
-				ByteDifference(0), 
-				[this](ByteDifference diff, const Block &block)
-				{
-					return diff + 
-						characterSizeDifference(block) * 
-						block.charactersCount();
-				}
-			);
 			if (
-				end != blocks.rend() && 
-				end->containsCharacterIndex(characterIndex))
+				end != blocks.rend()
+			)
 			{
-				diff -= 
-					characterSizeDifference(*end) * 
-					(
-						end->firstCharacter + 
-						end->charactersCount() - 
-						characterIndex
-					);
-				res.size = end->characterSize();
+				res.index += end->firstByteDifference;
+				if (end->containsCharacterIndex(characterIndex))
+				{
+					res.size = end->characterSize();
+					res.index += 
+						(characterIndex - end->firstCharacter) * characterSizeDifference(*end);
+				}
 			}
-
-			res.index += diff;
 
 			return res;
 		}

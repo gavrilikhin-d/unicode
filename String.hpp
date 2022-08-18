@@ -483,22 +483,6 @@ private:
 			return std::make_reverse_iterator(block);
 		}
 
-		/// Get size of character in bytes
-		ByteSize getCharacterSize(CharacterIndex index) const noexcept
-		{
-			assert(isEvaluated() && "layout is not evaluated");
-
-			auto block = getNearestLeftBlock(index);
-			if (
-				block != blocks.rend() && 
-				block->containsCharacterIndex(index)
-			) 
-			{ 
-				return block->characterSize();
-			}
-			return averageCharacterSize;
-		}
-
 		/// Estimate first byte index for character
 		ByteIndex estimateFirstByteIndex(CharacterIndex index) const noexcept
 		{
@@ -514,41 +498,6 @@ private:
 			return 
 				ByteDifference(block.characterSize()) - 
 				ByteDifference(averageCharacterSize);
-		}
-
-		/// Difference from first byte index estimation for character index
-		ByteDifference byteDifferenceForCharacter(
-			CharacterIndex index
-		) const noexcept
-		{
-			assert(isEvaluated() && "layout is not evaluated");
-			auto end = getNearestLeftBlock(index);
-			auto diff = std::accumulate(
-				blocks.begin(), end.base(),
-				ByteDifference(0), 
-				[this](ByteDifference diff, const Block &block)
-				{
-					return diff + 
-						characterSizeDifference(block) * 
-						block.charactersCount();
-				}
-			);
-			if (end != blocks.rend() && end->containsCharacterIndex(index))
-			{
-				diff -= characterSizeDifference(*end) * 
-					(end->firstCharacter + end->charactersCount() - index);
-			}
-			return diff;
-		}
-
-		/// Get index of first byte for character
-		ByteIndex getFirstByteIndexForCharacter(
-			CharacterIndex characterIndex
-		) const noexcept
-		{
-			return 
-				estimateFirstByteIndex(characterIndex) + 
-				byteDifferenceForCharacter(characterIndex);
 		}
 
 		/// Information about character

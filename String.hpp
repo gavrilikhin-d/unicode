@@ -447,7 +447,6 @@ private:
 		auto getNearestLeftBlock(CharacterIndex index) const noexcept
 		{
 			auto block = blocks.upper_bound(index);
-			if (block == blocks.begin()) { return blocks.rend(); }
 			return std::make_reverse_iterator(block);
 		}
 

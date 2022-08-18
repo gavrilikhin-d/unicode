@@ -301,10 +301,6 @@ private:
 			/// 0 means 1 byte, as character occupies at least 1 byte
 			ByteSize characterSizeMinusOne : 4 = 0;
 
-			/// TODO: maybe store difference from first byte estimation?
-			/// it will be sum of byte differences from previous blocks
-			/// ByteDifference firstByteDifference = 0;
-
 			/// Get size of character in bytes
 			constexpr ByteSize characterSize() const noexcept
 			{

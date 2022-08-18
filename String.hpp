@@ -156,7 +156,7 @@ public:
 	/// Create string from UTF-8 encoded characters
 	BasicString(std::string_view view) : bytes(view) {}
 	/// Create unicode string from utf-8 encoded string
-	BasicString(std::string str) noexcept : bytes(std::move(str)) {}
+	BasicString(Storage str) noexcept : bytes(std::move(str)) {}
 
 	/// Don't create string from nullptr
 	BasicString(std::nullptr_t) = delete;
@@ -179,7 +179,7 @@ public:
 		return layout().size;
 	}
 
-	operator const std::string &() const noexcept { return bytes; }
+	operator const Storage &() const noexcept { return bytes; }
 	operator std::string_view() const noexcept { return bytes; }
 
 	/// Get character by index. Negative index is counted from the end.

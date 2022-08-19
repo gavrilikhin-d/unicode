@@ -66,6 +66,19 @@ using namespace unicode;
 
 
 /* 1-st type of texts */
+static void englishStandardStringIterator(benchmark::State& state)
+{
+	auto content = readFile("./data/english/wiki.txt");
+	String unicode = content; 
+	for (auto _ : state) 
+	{ 
+		for (auto c : content) 
+		{ 
+			benchmark::DoNotOptimize(c); 
+		} 
+	} 
+}
+BENCHMARK(englishStandardStringIterator);
 BENCHMARK_LANGUAGE(english)
 BENCHMARK_LANGUAGE(german)
 

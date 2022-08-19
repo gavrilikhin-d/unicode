@@ -498,8 +498,13 @@ public:
 		
 		if (not isEmpty() && layoutIsEvaluated())
 		{
-			/// TODO: reevaluate layout
-			_layout.clear();
+			auto lastCharacter = back();
+			_layout.dropLayoutStartingFrom(_layout.size - 1);
+			str = std::string_view{
+				lastCharacter.begin(), 
+				lastCharacter.size() + str.size()
+			};
+			_layout.updateAfterAppend(str);
 		}
 		
 		return *this;
@@ -654,73 +659,10 @@ private:
 			Layout layout{
 				.averageCharacterSize = 
 					ByteSize(std::round(double(str.size()) / size)),
-				.size = size
+				.size = 0
 			};
 
-			auto utext = detail::openUText(str);
-			auto it = detail::getCharacterBreakIterator(&utext);
-
-			ByteSize previousCharacterSize = layout.averageCharacterSize;
-			std::optional<Block> currentBlock;
-			CharacterIndex characterIndex = 0;
-			ByteDifference byteDifference = 0;
-			for (
-				auto start = it->first(), end = it->next();
-				end != icu::BreakIterator::DONE; 
-				start = end, end = it->next(), ++characterIndex)
-			{
-				ByteSize characterByteSize = end - start;
-
-				// This character may be part of block
-				if (characterByteSize == previousCharacterSize)
-				{
-					// Character size is the same as average
-					if (previousCharacterSize == layout.averageCharacterSize)
-					{
-						continue;
-					}
-
-					assert(
-						currentBlock.has_value() && 
-						"current block is not set"
-					);
-
-					// Add character to block, if it's not full
-					if (not currentBlock->isFull())
-					{
-						currentBlock->incrementCharactersCount();
-						continue;
-					}
-
-					// block is full -> falthrough to creating new block
-				}
-
-				// Add previous block to set
-				if (currentBlock)
-				{
-					byteDifference += 
-						currentBlock->charactersCount() * 
-						layout.characterSizeDifference(*currentBlock);
-					layout.blocks.push_back(std::move(*currentBlock));
-				}
-
-				// New block needed
-				currentBlock = Block{
-					.firstCharacter = characterIndex,
-					.firstByteDifference = byteDifference
-				};
-				currentBlock->setCharacterSize(characterByteSize);
-
-				previousCharacterSize = characterByteSize;
-			}
-
-			// Add last block to set
-			if (currentBlock) 
-			{ 
-				layout.blocks.push_back(std::move(*currentBlock)); 
-			}
-
-			utext_close(&utext);
+			layout.updateAfterAppend(str);
 
 			return layout;
 		}
@@ -728,6 +670,13 @@ private:
 
 		/// Get iterator to block that contains character or just before it
 		auto getNearestLeftBlock(CharacterIndex index) const noexcept
+		{
+			auto block = blocks.upper_bound(index);
+			return std::make_reverse_iterator(block);
+		}
+
+		/// Get iterator to block that contains character or just before it
+		auto getNearestLeftBlock(CharacterIndex index) noexcept
 		{
 			auto block = blocks.upper_bound(index);
 			return std::make_reverse_iterator(block);
@@ -748,6 +697,22 @@ private:
 			return 
 				ByteDifference(block.characterSize()) - 
 				ByteDifference(averageCharacterSize);
+		}
+
+		/// Difference in bytes that this whole block adds
+		ByteDifference byteDifferenceFromBlock(
+			const Block &block
+		) const noexcept
+		{
+			return block.charactersCount() * characterSizeDifference(block);
+		}
+
+		/// Difference in bytes after block
+		ByteDifference byteDifferenceAfterBlock(
+			const Block &block
+		) const noexcept
+		{
+			return block.firstByteDifference + byteDifferenceFromBlock(block);
 		}
 
 		/// Information about character
@@ -796,6 +761,108 @@ private:
 			averageCharacterSize = NOT_EVALUATED;
 			size = 0;
 			blocks.clear();
+		}
+
+		/// Drop layout information starting from character and to the end
+		void dropLayoutStartingFrom(CharacterIndex index)
+		{
+			assert(isEvaluated() && "layout is not evaluated");
+
+			if (index == 0) { *this = Layout::getFor(""); return; }
+			if (index == size) { return; }
+
+			size = index;
+
+			if (blocks.isEmpty()) { return; }
+
+			auto end = getNearestLeftBlock(index);
+			if (end != blocks.rend() && end->containsCharacterIndex(index))
+			{
+				if (end->firstCharacter != index)
+				{
+					end->setCharactersCount(index - end->firstCharacter);
+				}
+				else
+				{
+					++end;
+				}
+			}
+			blocks.erase(end.base(), blocks.end());
+		}
+
+		/// Update layout after appending string.
+		/// @warning include last symbol from string to be appended as well,
+		/// inorder to correctly merge it
+		void updateAfterAppend(std::string_view str) noexcept
+		{
+			assert(isEvaluated() && "layout is not evaluated");
+
+			auto utext = detail::openUText(str);
+			auto it = detail::getCharacterBreakIterator(&utext);
+
+			ByteSize previousCharacterSize = averageCharacterSize;
+			std::optional<Block> currentBlock;
+			CharacterIndex characterIndex = size;
+			ByteDifference byteDifference = 0;
+			if (not blocks.isEmpty())
+			{
+				byteDifference = byteDifferenceAfterBlock(blocks.back());
+			}
+			for (
+				auto start = it->first(), end = it->next();
+				end != icu::BreakIterator::DONE; 
+				start = end, end = it->next(), ++characterIndex, ++size)
+			{
+				ByteSize characterByteSize = end - start;
+
+				// This character may be part of block
+				if (characterByteSize == previousCharacterSize)
+				{
+					// Character size is the same as average
+					if (previousCharacterSize == averageCharacterSize)
+					{
+						continue;
+					}
+
+					assert(
+						currentBlock.has_value() && 
+						"current block is not set"
+					);
+
+					// Add character to block, if it's not full
+					if (not currentBlock->isFull())
+					{
+						currentBlock->incrementCharactersCount();
+						continue;
+					}
+
+					// block is full -> falthrough to creating new block
+				}
+
+				// Add previous block to set
+				if (currentBlock)
+				{
+					byteDifference += byteDifferenceFromBlock(*currentBlock);
+					blocks.push_back(std::move(*currentBlock));
+				}
+
+				// New block needed
+				currentBlock = Block{
+					.firstCharacter = characterIndex,
+					.firstByteDifference = byteDifference
+				};
+				currentBlock->setCharacterSize(characterByteSize);
+
+				previousCharacterSize = characterByteSize;
+			}
+
+			// Add last block to set
+			if (currentBlock) 
+			{ 
+				blocks.push_back(std::move(*currentBlock)); 
+			}
+
+			utext_close(&utext);
 		}
 	};
 

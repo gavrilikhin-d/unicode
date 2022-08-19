@@ -134,6 +134,24 @@ TEST(Functionality, reverseIteration)
 	}
 }
 
+TEST(Functionality, concatenation)
+{
+	std::string str =
+		"🇺🇸: Hello, world!\n";
+	String myStr = str;
+
+	EXPECT_TRUE(areEqual(myStr, str));
+
+	str   += "🇷🇺: Привет, мир!\n";
+	myStr += "🇷🇺: Привет, мир!\n";
+
+	EXPECT_TRUE(areEqual(myStr, str));
+
+	str  += "🇨🇳: 你好，世界！\n";
+	myStr = myStr + "🇨🇳: 你好，世界！\n";
+	EXPECT_TRUE(areEqual(myStr, str));
+}
+
 /// Read whole file content
 static std::string readFile(const std::string &path)
 {

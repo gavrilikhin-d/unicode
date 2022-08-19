@@ -337,6 +337,7 @@ public:
 	[[nodiscard("Possibly expensive O(n) operation")]]
 	bool isASCII() const noexcept 
 	{ 
+		/// FIXME: char >= 0x80
 		return layout().isASCII();
 	}
 
@@ -491,6 +492,61 @@ public:
 			_layout.clear();
 		}
 		bytes.resize(size); 
+	}
+
+	/// Push character to the end of string
+	void push_back(Character character) 
+	{
+		*this += character;
+	}
+
+	/// Append string to the end of string
+	void append(const BasicString &string) 
+	{
+		*this += string;
+	}
+
+	/// Pop character from the end of string
+	void pop_back() noexcept
+	{
+		if (isEmpty()) { return; }
+
+		auto lastCharacter = back();
+		layout().dropLayoutStartingFrom(absoluteIndex(-1));
+		bytes.erase(bytes.end() - lastCharacter.size(), bytes.end());
+	}
+
+	/// Forward to insertBefore()
+	template<typename ...Args>
+	[[deprecated("Use insertBefore()")]]
+	void insert(Args &&...args)
+	{
+		return insertBefore(std::forward<Args>(args)...);
+	}
+
+	/// Insert string before given position
+	void insertBefore(CharacterIndex index, const BasicString &str)
+	{
+		assert(index <= size() && "out of bounds");
+
+		if (str.isEmpty()) { return; }
+
+		if (index == size()) { return append(str); }
+
+		auto [byteIndex, size] = layout().getCharacterByteIndexAndSize(index);
+		bytes.insert(
+			bytes.begin() + byteIndex, 
+			str.bytes.begin(), str.bytes.end()
+		);
+
+		/// TODO: optimization
+		_layout.clear();
+	}
+
+	/// Insert after given position
+	void insertAfter(CharacterIndex index, const BasicString &str)
+	{
+		return insertBefore(index + 1, str);
 	}
 
 	/// Append utf-8 string to the end of this string

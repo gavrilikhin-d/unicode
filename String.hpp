@@ -339,6 +339,11 @@ public:
 		/// TODO: SizeRequest helper, that will lazily calculate size
 		return layout().size;
 	}
+	
+	/// Get length of string in characters
+	[[nodiscard("Possibly expensive O(n) operation")]]
+	SizeType length() const noexcept { return size(); }
+
 
 	operator const Storage &() const noexcept { return bytes; }
 	operator std::string_view() const noexcept { return bytes; }
@@ -419,6 +424,55 @@ public:
 		assert(relative <= 0 || start + relative <= size() && "past end index");
 		return start + relative;
 	}
+
+	/// Get first character
+	[[nodiscard("Possibly expensive O(n) operation")]]
+	Character front() const noexcept { return (*this)[0]; }
+
+	/// Get last character
+	[[nodiscard("Possibly expensive O(n) operation")]]
+	Character back() const noexcept { return (*this)[-1]; }
+
+	/// Get C string
+	const char *c_str() const noexcept { return bytes.c_str(); }
+
+	/// Get data string
+	char *data() noexcept 
+	{ 
+		// Clear layout, as it may become invalid
+		_layout = Layout{};
+		return bytes.data(); 
+	}
+
+	/// Get data string
+	const char *data() const noexcept { return bytes.data(); }
+
+
+	/// Get capacity of string in bytes
+	ByteSize capacity() const noexcept { return bytes.capacity(); }
+
+	/// Get size of string in bytes
+	ByteSize size_in_bytes() const noexcept { return bytes.size(); }
+
+	/// Shrink string to fit its size
+	void shrink_to_fit() { bytes.shrink_to_fit(); }
+
+	/// Reserve space for string
+	void reserve(ByteSize size) { bytes.reserve(size); }
+
+	/// Resize string
+	void resize(ByteSize size) 
+	{
+		if (size < size_in_bytes())
+		{
+			// Clear layout, as it may become invalid
+			_layout = Layout{};
+		}
+		bytes.resize(size); 
+	}
+
+
+
 
 	/// Append  utf-8 string to the end of this string
 	BasicString &operator+=(std::string_view str)

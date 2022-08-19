@@ -66,7 +66,7 @@ TEST(UTF8, hello)
 	EXPECT_TRUE(areEqual(hello, str));
 }
 
-TEST(UTF8, reverseIteration)
+TEST(Functionality, negativeIndexes)
 {
 	std::string str =
 		"🇺🇸: Hello, world!\n"
@@ -93,6 +93,25 @@ TEST(UTF8, reverseIteration)
 		EXPECT_EQ(c, substr);
 	}
 	utext_close(&utext);
+}
+
+TEST(Functionality, iteration)
+{
+	std::string str =
+		"🇺🇸: Hello, world!\n"
+		"🇷🇺: Привет, мир!\n"
+		"🇨🇳: 你好，世界！\n" 
+		"🇯🇵: こんにちは世界！\n" 
+		"🇰🇷: 안녕하세요 세계!\n"
+		"I💜Unicode";
+
+	String hello = str;
+
+	for (auto c : hello)
+	{
+		EXPECT_EQ(c, str.substr(0, c.size()));
+		str.erase(0, c.size());
+	}
 }
 
 /// Read whole file content

@@ -135,21 +135,21 @@ public:
 		using iterator_category = std::contiguous_iterator_tag;
 		using value_type = Character;
 		using difference_type = RelativeCharacterIndex;
-		using pointer = const Character *;
-		using reference = const Character &;
+		using pointer = Character *;
+		using reference = Character;
 
 		Iterator(BasicString &str, CharacterIndex index = 0) noexcept
-			: str(&str), index(index)
+			: stringPointer(&str), index(index)
 		{}
 
 		reference operator*() const noexcept
 		{
-			return str[index];
+			return (*stringPointer)[index];
 		}
 
 		pointer operator->() const noexcept
 		{
-			return &str[index];
+			return &(stringPointer)[index];
 		}
 
 		Iterator &operator++() noexcept
@@ -202,18 +202,31 @@ public:
 
 		difference_type operator-(const Iterator &other) const noexcept
 		{
+			assert(
+				stringPointer == other.stringPointer && 
+				"Comparing iterators from different strings"
+			);
 			return index - other.index;
 		}
 
 		reference operator[](difference_type offset) const noexcept
 		{
-			return str[index + offset];
+			return (*stringPointer)[index + offset];
+		}
+
+		bool operator==(const Iterator &other) const noexcept
+		{
+			assert(
+				stringPointer == other.stringPointer && 
+				"Comparing iterators from different strings"
+			);
+			return index == other.index;
 		}
 
 		auto operator<=>(const Iterator &other) const noexcept
 		{
 			assert(
-				str == other.str && 
+				stringPointer == other.stringPointer && 
 				"Comparing iterators from different strings"
 			);
 			return index <=> other.index;
@@ -223,7 +236,7 @@ public:
 		/// TODO: use BreakIterator if possible
 
 		/// String, this iterator belongs to
-		BasicString *str = nullptr;
+		BasicString *stringPointer = nullptr;
 		/// Index of character, this iterator points to
 		CharacterIndex index = 0;
 	};

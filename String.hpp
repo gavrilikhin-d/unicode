@@ -440,7 +440,7 @@ public:
 	char *data() noexcept 
 	{ 
 		// Clear layout, as it may become invalid
-		_layout = Layout{};
+		_layout.clear();
 		return bytes.data(); 
 	}
 
@@ -466,7 +466,7 @@ public:
 		if (size < size_in_bytes())
 		{
 			// Clear layout, as it may become invalid
-			_layout = Layout{};
+			_layout.clear();
 		}
 		bytes.resize(size); 
 	}
@@ -483,14 +483,14 @@ public:
 		if (bytes.size() <= str.size())
 		{
 			// just clear layout information to reevaluate later
-			_layout = Layout{};
+			_layout.clear();
 		}
 		bytes += str;
 		
 		if (not isEmpty() && layoutIsEvaluated())
 		{
 			/// TODO: reevaluate layout
-			_layout = Layout{};
+			_layout.clear();
 		}
 		
 		return *this;
@@ -771,6 +771,14 @@ private:
 			}
 
 			return res;
+		}
+
+		/// Clear layout information
+		void clear() noexcept
+		{
+			averageCharacterSize = NOT_EVALUATED;
+			size = 0;
+			blocks.clear();
 		}
 	};
 

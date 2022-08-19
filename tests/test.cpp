@@ -151,8 +151,19 @@ TEST(Functionality, concatenation)
 	myStr = myStr + "🇨🇳: 你好，世界！\n";
 	EXPECT_TRUE(areEqual(myStr, str));
 
+	/* Here average size is 2 */
+
+	str += "I💜Unicode";
+	for (std::string tmp = "I💜Unicode"; auto c : tmp)
+	{
+		myStr += c;
+	}
+	EXPECT_TRUE(areEqual(myStr, str));
+
 	str.clear();
 	myStr.clear();
+
+	/* Here average size is 1 */
 
 	str += 'I';
 	myStr += 'I';

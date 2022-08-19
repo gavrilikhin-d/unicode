@@ -114,6 +114,26 @@ TEST(Functionality, iteration)
 	}
 }
 
+TEST(Functionality, reverseIteration)
+{
+	std::string str =
+		"🇺🇸: Hello, world!\n"
+		"🇷🇺: Привет, мир!\n"
+		"🇨🇳: 你好，世界！\n" 
+		"🇯🇵: こんにちは世界！\n" 
+		"🇰🇷: 안녕하세요 세계!\n"
+		"I💜Unicode";
+
+	String hello = str;
+
+	for (auto it = hello.rbegin(); it != hello.rend(); ++it)
+	{
+		auto c = *it;
+		EXPECT_EQ(c, str.substr(str.size() - c.size(), c.size()));
+		str.erase(str.size() - c.size(), c.size());
+	}
+}
+
 /// Read whole file content
 static std::string readFile(const std::string &path)
 {

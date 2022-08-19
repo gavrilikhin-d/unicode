@@ -19,6 +19,10 @@ else()
 endif()
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+	set_property(
+		CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS 
+		Debug RelWithDebInfo Release MinSizeRel
+	)
 	set(
 		CMAKE_BUILD_TYPE "Debug" CACHE STRING
 		"Debug | RelWithDebInfo | Release | MinSizeRel"

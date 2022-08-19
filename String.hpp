@@ -332,6 +332,17 @@ public:
 	/// Is string empty?
 	bool isEmpty() const noexcept { return bytes.empty(); }
 
+	/// Is string empty?
+	[[nodiscard, deprecated("use isEmpty() instead")]]
+	bool empty() const noexcept { return isEmpty(); }
+
+	/// Clear string
+	void clear() noexcept
+	{ 
+		_layout.clear();
+		bytes.clear();
+	}
+
 	/// Get size of string in characters
 	[[nodiscard("Possibly expensive O(n) operation")]]
 	SizeType size() const noexcept 
@@ -472,9 +483,7 @@ public:
 	}
 
 
-
-
-	/// Append  utf-8 string to the end of this string
+	/// Append utf-8 string to the end of this string
 	BasicString &operator+=(std::string_view str)
 	{
 		if (str.empty()) { return *this; }
@@ -495,6 +504,14 @@ public:
 		
 		return *this;
 	}
+
+	/// Copy and concatenate two strings
+	BasicString operator+(std::string_view str) const noexcept
+	{
+		BasicString result = *this;
+		result += str;
+		return result;
+	} 
 
 	friend std::ostream &operator<<(std::ostream &os, const BasicString &str)
 	{

@@ -105,7 +105,7 @@ public:
 	/// Type of string size in characters.
 	///
 	/// @details 
-	///  Is less than @c size_t because of: 
+	///  Is less than 2^64 because of: 
 	///	 	* @c BreakIterator limitations
 	///     * @c Block memory efficiency
 	///     * Why would you need contignuous strings that big?
@@ -119,6 +119,120 @@ public:
 	/// Character inside of string
 	/// TODO: special class, that may be used to modify string
 	using Character = std::string_view;
+
+	using value_type = Character;
+	using size_type = uint32_t;
+	using difference_type = int32_t;
+	using reference = value_type;
+	using const_reference = const value_type;
+	using pointer = value_type *;
+	using const_pointer = const value_type *;
+
+	/// Random access iterator over characters
+	class Iterator
+	{
+	public:
+		using iterator_category = std::contiguous_iterator_tag;
+		using value_type = Character;
+		using difference_type = RelativeCharacterIndex;
+		using pointer = const Character *;
+		using reference = const Character &;
+
+		Iterator(BasicString &str, CharacterIndex index = 0) noexcept
+			: str(&str), index(index)
+		{}
+
+		reference operator*() const noexcept
+		{
+			return str[index];
+		}
+
+		pointer operator->() const noexcept
+		{
+			return &str[index];
+		}
+
+		Iterator &operator++() noexcept
+		{
+			++index;
+			return *this;
+		}
+
+		Iterator operator++(int) noexcept
+		{
+			auto copy = *this;
+			++index;
+			return copy;
+		}
+
+		Iterator &operator--() noexcept
+		{
+			--index;
+			return *this;
+		}
+
+		Iterator operator--(int) noexcept
+		{
+			auto copy = *this;
+			--index;
+			return copy;
+		}
+
+		Iterator &operator+=(difference_type offset) noexcept
+		{
+			index += offset;
+			return *this;
+		}
+
+		Iterator operator+(difference_type offset) const noexcept
+		{
+			return Iterator(*this) += offset;
+		}
+
+		Iterator &operator-=(difference_type offset) noexcept
+		{
+			index -= offset;
+			return *this;
+		}
+
+		Iterator operator-(difference_type offset) const noexcept
+		{
+			return Iterator(*this) -= offset;
+		}
+
+		difference_type operator-(const Iterator &other) const noexcept
+		{
+			return index - other.index;
+		}
+
+		reference operator[](difference_type offset) const noexcept
+		{
+			return str[index + offset];
+		}
+
+		auto operator<=>(const Iterator &other) const noexcept
+		{
+			assert(
+				str == other.str && 
+				"Comparing iterators from different strings"
+			);
+			return index <=> other.index;
+		}
+		
+	private:
+		/// TODO: use BreakIterator if possible
+
+		/// String, this iterator belongs to
+		BasicString *str = nullptr;
+		/// Index of character, this iterator points to
+		CharacterIndex index = 0;
+	};
+
+	using iterator = Iterator;
+	using const_iterator = Iterator;
+	using reverse_iterator = std::reverse_iterator<iterator>;
+	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
 
 	/// Get maximum number of characters in string
 	static constexpr SizeType maxSize() noexcept 
@@ -160,6 +274,32 @@ public:
 
 	/// Don't create string from nullptr
 	BasicString(std::nullptr_t) = delete;
+
+
+	iterator begin() noexcept { return iterator(*this); }
+	iterator end() noexcept { return iterator(*this, size()); }
+	const_iterator begin() const noexcept 
+	{ 
+		return const_iterator(*this); 
+	}
+	const_iterator end() const noexcept 
+	{ 
+		return const_iterator(*this, size()); 
+	}
+
+	const_iterator cbegin() const noexcept { return begin(); }
+	const_iterator cend() const noexcept { return end(); }
+
+	reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+	reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+	const_reverse_iterator rbegin() const noexcept 
+	{ 
+		return const_reverse_iterator(end()); 
+	}
+	const_reverse_iterator rend() const noexcept 
+	{ 
+		return const_reverse_iterator(begin()); 
+	}
 
 	/// Does string contain only ASCII characters?
 	[[nodiscard("Possibly expensive O(n) operation")]]

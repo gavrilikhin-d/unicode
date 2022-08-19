@@ -343,7 +343,7 @@ public:
 	operator const Storage &() const noexcept { return bytes; }
 	operator std::string_view() const noexcept { return bytes; }
 
-	/// Get character by index. Negative index is counted from the end.
+	/// Get character by index.
 	template<std::unsigned_integral PositiveIndex>
 	[[nodiscard("Possibly expensive O(n) operation")]]
 	Character operator[](PositiveIndex index) const noexcept
@@ -364,6 +364,39 @@ public:
 			characterIndex = absoluteIndex(index);
 		}
 		return (*this)[characterIndex];
+	}
+
+	/// Get character by index.
+	template<std::unsigned_integral PositiveIndex>
+	[[nodiscard("Possibly expensive O(n) operation")]]
+	Character at(PositiveIndex index) const noexcept
+	{
+		if (index >= size())
+		{
+			throw std::out_of_range(
+				"Index " + std::to_string(index) + " is out of range"
+			);
+		}
+		return (*this)[index];
+	}
+
+	// Get character by index. Negative index is counted from the end.
+	template<std::signed_integral NegativeIndex>
+	[[nodiscard("Possibly expensive O(n) operation")]]
+	Character at(NegativeIndex index) const noexcept
+	{
+		CharacterIndex characterIndex = index;
+		if (index < 0)
+		{
+			if (index < -size())
+			{
+				throw std::out_of_range(
+					"Index " + std::to_string(index) + " is out of range"
+				);
+			}
+			characterIndex = absoluteIndex(index);
+		}
+		return this->at(characterIndex);
 	}
 
 	/// Convert relative index from end to absolute

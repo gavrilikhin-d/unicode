@@ -12,6 +12,7 @@
 
 #include <unicode/utext.h>
 #include <unicode/brkiter.h>
+#include <unicode/coll.h>
 
 namespace unicode
 {
@@ -19,6 +20,53 @@ namespace unicode
 /// Helpers that deal with unicode
 namespace detail
 {
+
+/// Create collator
+std::unique_ptr<icu::Collator> getCollator() noexcept
+{
+	UErrorCode errorCode = U_ZERO_ERROR;
+	std::unique_ptr<icu::Collator> coll {
+		icu::Collator::createInstance(
+			icu::Locale::getDefault(), 
+			errorCode
+		)
+	};
+	if (U_FAILURE(errorCode)) { return nullptr; }
+	return coll;
+}
+
+/// Compare 2 UTF-8 strings
+std::strong_ordering compareUTF8(
+	std::string_view lhs, 
+	std::string_view rhs
+) noexcept
+{
+	auto coll = detail::getCollator();
+	if (!coll)
+	{
+		assert(false && "coudn't create collator");
+		return lhs.compare(rhs) <=> 0;
+	}
+	
+	UErrorCode errorCode = U_ZERO_ERROR;
+	auto res = coll->compareUTF8(lhs, rhs, errorCode);
+	if (U_FAILURE(errorCode))
+	{
+		assert(false && "collator error");
+		return lhs.compare(rhs) <=> 0;
+	}
+	
+	switch (res)
+	{
+	case UCOL_LESS: return std::strong_ordering::less;
+	case UCOL_EQUAL:
+	    // TODO: maybe check if they are equivalent?
+		return std::strong_ordering::equal;
+	case UCOL_GREATER: return std::strong_ordering::greater;
+	default:
+		assert(false && "unreachable");
+	};
+}
 
 /// Get character break iterator at the beginning of openned unicode text 
 std::unique_ptr<icu::BreakIterator> 
@@ -135,6 +183,7 @@ public:
 	using const_pointer = const value_type *;
 
 	/// Random access iterator over characters
+	template<typename String>
 	class Iterator
 	{
 	public:
@@ -144,7 +193,7 @@ public:
 		using pointer = Character *;
 		using reference = Character;
 
-		Iterator(BasicString &str, CharacterIndex index = 0) noexcept
+		Iterator(String &str, CharacterIndex index = 0) noexcept
 			: stringPointer(&str), index(index)
 		{}
 
@@ -242,13 +291,13 @@ public:
 		/// TODO: use BreakIterator if possible
 
 		/// String, this iterator belongs to
-		BasicString *stringPointer = nullptr;
+		String *stringPointer = nullptr;
 		/// Index of character, this iterator points to
 		CharacterIndex index = 0;
 	};
 
-	using iterator = Iterator;
-	using const_iterator = Iterator;
+	using iterator = Iterator<BasicString>;
+	using const_iterator = Iterator<const BasicString>;
 	using reverse_iterator = std::reverse_iterator<iterator>;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -597,7 +646,19 @@ public:
 		BasicString result = *this;
 		result += str;
 		return result;
-	} 
+	}
+
+	bool operator==(const BasicString &str) const noexcept
+	{
+		return 
+			detail::compareUTF8(bytes, str.bytes) == 
+			std::strong_ordering::equal;
+	}
+
+	bool operator<=>(const BasicString &str) const noexcept
+	{
+		return detail::compareUTF8(bytes, str.bytes);
+	}
 
 	friend std::ostream &operator<<(std::ostream &os, const BasicString &str)
 	{

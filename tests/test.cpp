@@ -34,6 +34,7 @@ TEST(ASCII, empty)
 {
 	String empty;
 	EXPECT_TRUE(areEqual(empty, ""));
+	EXPECT_EQ(empty, "");
 	EXPECT_EQ(empty.size(), 0);
 	EXPECT_TRUE(empty.isEmpty());
 	EXPECT_TRUE(empty.isASCII());
@@ -44,6 +45,7 @@ TEST(ASCII, repeated)
 	String::SizeType times = 3;
 	auto repeated = String::repeat('x', Times{times});
 	EXPECT_TRUE(areEqual(repeated, std::string(3, 'x')));
+	EXPECT_EQ(repeated, std::string(3, 'x'));
 	EXPECT_EQ(repeated.size(), times);
 	EXPECT_FALSE(repeated.isEmpty());
 	EXPECT_TRUE(repeated.isASCII());
@@ -64,6 +66,7 @@ TEST(UTF8, hello)
 	EXPECT_FALSE(hello.isEmpty());
 	EXPECT_FALSE(hello.isASCII());
 	EXPECT_TRUE(areEqual(hello, str));
+	EXPECT_EQ(hello, str);
 }
 
 TEST(Functionality, negativeIndexes)
@@ -141,15 +144,21 @@ TEST(Functionality, concatenation)
 	String myStr = str;
 
 	EXPECT_TRUE(areEqual(myStr, str));
+	EXPECT_EQ(myStr, str);
+
 
 	str   += "🇷🇺: Привет, мир!\n";
 	myStr += "🇷🇺: Привет, мир!\n";
 
 	EXPECT_TRUE(areEqual(myStr, str));
+	EXPECT_EQ(myStr, str);
+
 
 	str  += "🇨🇳: 你好，世界！\n";
 	myStr = myStr + "🇨🇳: 你好，世界！\n";
 	EXPECT_TRUE(areEqual(myStr, str));
+	EXPECT_EQ(myStr, str);
+
 
 	/* Here average size is 2 */
 
@@ -159,15 +168,21 @@ TEST(Functionality, concatenation)
 		myStr += c;
 	}
 	EXPECT_TRUE(areEqual(myStr, str));
+	EXPECT_EQ(myStr, str);
+
 
 	str.clear();
 	myStr.clear();
+	EXPECT_EQ(myStr, str);
+
 
 	/* Here average size is 1 */
 
 	str += 'I';
 	myStr += 'I';
 	EXPECT_TRUE(areEqual(myStr, str));
+	EXPECT_EQ(myStr, str);
+
 
 	str += "💜";
 	for (std::string heart = "💜"; auto c : heart)
@@ -175,6 +190,8 @@ TEST(Functionality, concatenation)
 		myStr += c;
 	}
 	EXPECT_TRUE(areEqual(myStr, str));
+	EXPECT_EQ(myStr, str);
+
 
 	str += "Unicode";
 	for (std::string unicode = "Unicode"; auto c : unicode)
@@ -182,8 +199,11 @@ TEST(Functionality, concatenation)
 		myStr += c;
 	}
 	EXPECT_TRUE(areEqual(myStr, str));
+	EXPECT_EQ(myStr, str);
 
-	EXPECT_TRUE(areEqual(myStr[1], "💜"));
+
+	EXPECT_EQ(myStr[1], "💜");
+
 
 	EXPECT_EQ(
 		myStr.size(), 
@@ -207,6 +227,7 @@ TEST(English, wiki)
 	String unicode = content;
 	EXPECT_FALSE(unicode.isEmpty());
 	EXPECT_TRUE(areEqual(unicode, content));
+	EXPECT_EQ(unicode, content);
 }
 
 TEST(Russian, wiki)
@@ -215,6 +236,7 @@ TEST(Russian, wiki)
 	String unicode = content;
 	EXPECT_FALSE(unicode.isEmpty());
 	EXPECT_TRUE(areEqual(unicode, content));
+	EXPECT_EQ(unicode, content);
 }
 
 TEST(Chinese, wiki)
@@ -223,6 +245,7 @@ TEST(Chinese, wiki)
 	String unicode = content;
 	EXPECT_FALSE(unicode.isEmpty());
 	EXPECT_TRUE(areEqual(unicode, content));
+	EXPECT_EQ(unicode, content);
 }
 
 TEST(French, wiki)
@@ -231,6 +254,7 @@ TEST(French, wiki)
 	String unicode = content;
 	EXPECT_FALSE(unicode.isEmpty());
 	EXPECT_TRUE(areEqual(unicode, content));
+	EXPECT_EQ(unicode, content);
 }
 
 TEST(German, wiki)
@@ -239,6 +263,7 @@ TEST(German, wiki)
 	String unicode = content;
 	EXPECT_FALSE(unicode.isEmpty());
 	EXPECT_TRUE(areEqual(unicode, content));
+	EXPECT_EQ(unicode, content);
 }
 
 TEST(Japanese, wiki)
@@ -247,6 +272,7 @@ TEST(Japanese, wiki)
 	String unicode = content;
 	EXPECT_FALSE(unicode.isEmpty());
 	EXPECT_TRUE(areEqual(unicode, content));
+	EXPECT_EQ(unicode, content);
 }
 
 TEST(Korean, wiki)
@@ -255,4 +281,5 @@ TEST(Korean, wiki)
 	String unicode = content;
 	EXPECT_FALSE(unicode.isEmpty());
 	EXPECT_TRUE(areEqual(unicode, content));
+	EXPECT_EQ(unicode, content);
 }

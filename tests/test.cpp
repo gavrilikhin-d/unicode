@@ -150,6 +150,34 @@ TEST(Functionality, concatenation)
 	str  += "🇨🇳: 你好，世界！\n";
 	myStr = myStr + "🇨🇳: 你好，世界！\n";
 	EXPECT_TRUE(areEqual(myStr, str));
+
+	str.clear();
+	myStr.clear();
+
+	str += 'I';
+	myStr += 'I';
+	EXPECT_TRUE(areEqual(myStr, str));
+
+	str += "💜";
+	for (std::string heart = "💜"; auto c : heart)
+	{
+		myStr += c;
+	}
+	EXPECT_TRUE(areEqual(myStr, str));
+
+	str += "Unicode";
+	for (std::string unicode = "Unicode"; auto c : unicode)
+	{
+		myStr += c;
+	}
+	EXPECT_TRUE(areEqual(myStr, str));
+
+	EXPECT_TRUE(areEqual(myStr[1], "💜"));
+
+	EXPECT_EQ(
+		myStr.size(), 
+		detail::calculateSizeInCharacters(str)
+	);
 }
 
 /// Read whole file content

@@ -480,36 +480,37 @@ public:
 		bytes.resize(size); 
 	}
 
-
 	/// Append utf-8 string to the end of this string
-	BasicString &operator+=(std::string_view str)
+	BasicString &operator+=(const BasicString &str)
 	{
-		if (str.empty()) { return *this; }
+		if (str.isEmpty()) { return *this; }
+
+		/// TODO: use layout of other string
 
 		// Appended string is bigger
-		if (bytes.size() <= str.size())
+		if (size_in_bytes() <= str.size_in_bytes())
 		{
 			// just clear layout information to reevaluate later
 			_layout.clear();
 		}
-		bytes += str;
+		bytes += str.bytes;
 		
 		if (not isEmpty() && layoutIsEvaluated())
 		{
 			auto lastCharacter = back();
 			_layout.dropLayoutStartingFrom(_layout.size - 1);
-			str = std::string_view{
+			std::string_view view{
 				lastCharacter.begin(), 
-				lastCharacter.size() + str.size()
+				lastCharacter.size() + str.size_in_bytes()
 			};
-			_layout.updateAfterAppend(str);
+			_layout.updateAfterAppend(view);
 		}
 		
 		return *this;
 	}
 
 	/// Copy and concatenate two strings
-	BasicString operator+(std::string_view str) const noexcept
+	BasicString operator+(const BasicString &str) const noexcept
 	{
 		BasicString result = *this;
 		result += str;

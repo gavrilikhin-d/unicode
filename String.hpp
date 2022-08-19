@@ -3,12 +3,10 @@
 #include <string>
 #include <string_view>
 #include <iosfwd>
-#include <set>
 #include <memory>
-#include <cmath>
+#include <cmath> // round
 #include <cassert>
 #include <optional>
-#include <numeric>
 
 #include "SortedVector.hpp"
 

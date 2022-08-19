@@ -273,17 +273,30 @@ public:
 	/// Get ASCII character
 	static BasicString repeat(char c, Times times) noexcept
 	{
-		return BasicString::fromASCII(Storage(times.count, c));
+		// Check that character is ASCII
+		if (0x00 <= c && c <= 0x7F)
+		{
+			return BasicString::fromASCII(Storage(times.count, c));
+		}
+		return BasicString(Storage(times.count, c));
 	}
 
 	/// Create empty string
-	BasicString() noexcept : _layout(Layout{.averageCharacterSize = 1, .size = 0}) {}
-	/// Create string from ASCII character
+	BasicString() noexcept 
+		: _layout(Layout{.averageCharacterSize = 1, .size = 0}) {}
+	/// Create string from character
 	BasicString(char c) noexcept 
-		: BasicString(BasicString::fromASCII(Storage(1, c))) {}
-	/// Create string from ASCII characters
+		: BasicString(Storage(1, c)) 
+	{
+		// Check that character is ASCII
+		if (0x00 <= c && c <= 0x7F)
+		{
+			*this = BasicString::fromASCII(Storage(1, c));
+		}
+	}
+	/// Create string from characters
 	BasicString(std::initializer_list<char> chars) noexcept 
-		: BasicString(BasicString::fromASCII(Storage(chars))) {}
+		: BasicString(Storage(chars)) {}
 	/// Create string from UTF-8 encoded characters
 	BasicString(const char *str) : bytes(str) {}
 	/// Create string from UTF-8 encoded characters

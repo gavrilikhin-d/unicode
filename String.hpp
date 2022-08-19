@@ -495,15 +495,28 @@ public:
 		}
 		bytes += str.bytes;
 		
-		if (not isEmpty() && layoutIsEvaluated())
+		if (layoutIsEvaluated())
 		{
-			auto lastCharacter = back();
-			_layout.dropLayoutStartingFrom(_layout.size - 1);
-			std::string_view view{
-				lastCharacter.begin(), 
-				lastCharacter.size() + str.size_in_bytes()
-			};
-			_layout.updateAfterAppend(view);
+			if (_layout.size > 2)
+			{
+				// Reevaluate layout starting from second character from end.
+				// Need to do this, because some characters may combine
+				auto secondFromEnd = (*this)[absoluteIndex(-2)];
+				_layout.dropLayoutStartingFrom(absoluteIndex(-2));
+				std::string_view view{
+					secondFromEnd.begin(), 
+					bytes.size() - 
+						std::distance(
+							bytes.c_str(), 
+							secondFromEnd.cbegin()
+						)
+				};
+				_layout.updateAfterAppend(view);
+			}
+			else
+			{
+				_layout.clear();
+			}
 		}
 		
 		return *this;

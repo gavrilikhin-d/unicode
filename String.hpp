@@ -655,7 +655,7 @@ public:
 			std::strong_ordering::equal;
 	}
 
-	bool operator<=>(const BasicString &str) const noexcept
+	auto operator<=>(const BasicString &str) const noexcept
 	{
 		return detail::compareUTF8(bytes, str.bytes);
 	}

@@ -211,6 +211,44 @@ TEST(Functionality, concatenation)
 	);
 }
 
+TEST(Functionality, comparison)
+{
+	{
+		String a = "abcd";
+		String b = "abcd";
+		EXPECT_EQ(a, b);
+	}
+
+	{
+		// Denormalized unicode 'a' with acute"
+		String a = "a\u0301";
+		// Normalized unicode 'a' with acute
+		String b = "\u00e1";
+		EXPECT_NE("a\u0301", "\u00e1");
+		EXPECT_EQ(a, b);
+	}
+
+	{
+		String a = "1";
+		String b = "2";
+		EXPECT_NE(a, b);
+		EXPECT_LT(a, b);
+		EXPECT_LE(a, b);
+		EXPECT_GT(b, a);
+		EXPECT_GE(b, a);
+	}
+
+	{
+		String a = "в";
+		String b = "б";
+		EXPECT_NE(a, b);
+		EXPECT_LT(b, a);
+		EXPECT_LE(b, a);
+		EXPECT_GT(a, b);
+		EXPECT_GE(a, b);
+	}
+}
+
 /// Read whole file content
 static std::string readFile(const std::string &path)
 {

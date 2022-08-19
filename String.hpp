@@ -116,8 +116,16 @@ public:
 	/// Relative character index
 	using RelativeCharacterIndex = int32_t;
 
+	/// Size in bytes
+	using ByteSize = uint8_t;
+
+	/// Type for index of a byte in character
+	using ByteIndex = typename Storage::size_type;
+
+	/// Type for difference between byte indexes
+	using ByteDifference = typename Storage::difference_type;
+
 	/// Character inside of string
-	/// TODO: special class, that may be used to modify string
 	using Character = std::string_view;
 
 	using value_type = Character;
@@ -417,15 +425,6 @@ private:
 	/// Metadata about string layout
 	struct Layout
 	{
-		/// Size in bytes
-		using ByteSize = uint16_t;
-
-		/// Type for index of a byte in character
-		using ByteIndex = std::string::size_type;
-
-		/// Type for difference between byte indexes
-		using ByteDifference = std::string::difference_type;
-
 		enum { NOT_EVALUATED = 0 };
 		/// Average character size in bytes
 		ByteSize averageCharacterSize : 8 = NOT_EVALUATED;

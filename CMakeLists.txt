@@ -34,6 +34,36 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	)
 endif()
 
+# Print out path and version of any installed commands
+message(STATUS "CMake (${CMAKE_COMMAND}) Version: ${CMAKE_VERSION}")
+
+if(XCODE)
+	set(version_flag -version)
+else()
+	set(version_flag --version)
+endif()
+
+execute_process(
+	COMMAND ${CMAKE_MAKE_PROGRAM} ${version_flag}
+	OUTPUT_VARIABLE _CMAKE_MAKE_PROGRAM_VERSION
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+message(
+	STATUS
+	"CMake Make Program (${CMAKE_MAKE_PROGRAM}) Version: 
+	${_CMAKE_MAKE_PROGRAM_VERSION}"
+)
+message(
+	STATUS
+	"C Compiler (${CMAKE_C_COMPILER}) Version: ${CMAKE_C_COMPILER_VERSION}"
+)
+message(
+	STATUS
+	"C++ Compiler (${CMAKE_CXX_COMPILER}) Version: 
+	${CMAKE_CXX_COMPILER_VERSION}"
+)
+message(STATUS "")
+
 set(CMAKE_DISABLE_IN_SOURCE_BUILD YES)
 
 # ICU dependency
@@ -52,6 +82,9 @@ target_include_directories(
 		${CMAKE_CURRENT_SOURCE_DIR} 
 		${ICU_INCLUDE_DIRS}
 )
+
+include_directories(include)
+add_subdirectory(sources)
 
 add_subdirectory(tests)
 add_subdirectory(benchmarks)

@@ -24,7 +24,9 @@ struct layout
 	utility::sorted_vector<size_t> offsets;
 	/// Blocks of consecutive characters with same size
 	std::vector<block> blocks;
+
+	/// Get layout of string
+	static layout of(std::string_view bytes) noexcept;
 };
 	
 } // namespace unicode
-

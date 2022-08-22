@@ -46,7 +46,12 @@ public:
 	constexpr size_t size() const noexcept 
 	{
 		if (layout.offsets.empty()) { return 0; }
-		return layout.offsets.back() + layout.blocks.back().size(); 
+
+		auto &last_block = layout.blocks.back();
+		return 
+			layout.offsets.back() + 
+				(bytes.size() - last_block.byte_offset) / 
+				last_block.character_size; 
 	}
 
 	/// Is string empty?
@@ -76,7 +81,11 @@ public:
 		auto offset = layout.offsets[block_index];
 		auto &block = layout.blocks[block_index];
 
-		return character_view(block[index - offset]);
+		return character_view(
+			bytes.substr(
+				block.byte_offset + (index - offset) * block.character_size, block.character_size
+			)
+		);
 	}
 
 	/// Get character by index. Negative indexes are relative to end of string

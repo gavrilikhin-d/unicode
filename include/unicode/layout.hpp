@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <vector>
 #include <string_view>
 
@@ -13,34 +14,8 @@ struct block
 {
 	/// Size of characters inside of block, in bytes
 	size_t character_size = 0;
-	/// Bytes of characters
-	std::string_view bytes;
-
-	/// Size of block in characters
-	constexpr size_t size() const noexcept
-	{
-		assert(character_size > 0 && bytes.size() % character_size == 0);
-		return bytes.size() / character_size;
-	}
-	
-	/// Extend block by one character
-	constexpr void extend() noexcept
-	{
-		bytes = std::string_view{
-			bytes.data(),
-			bytes.size() + character_size
-		};
-	}
-
-	/// Get character with index, relative to start of block
-	constexpr std::string_view operator[](size_t index) const noexcept
-	{
-		assert(index < size() && "out of range");
-		return std::string_view{
-			bytes.data() + index * character_size,
-			character_size
-		};
-	}
+	/// Offset of the first byte of block
+	size_t byte_offset = 0;
 };
 
 /// Unicode string layout

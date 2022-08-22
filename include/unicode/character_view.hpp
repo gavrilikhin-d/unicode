@@ -8,10 +8,10 @@ namespace unicode
 {
 
 /// Single unicode character
-class character_view : public comparable_interface<character>
+class character_view : public comparable_interface<character_view>
 {
 public:
-	explicit character(std::string_view bytes) : bytes(bytes) {}
+	explicit character_view(std::string_view bytes) : bytes(bytes) {}
 
 	constexpr operator std::string_view() const noexcept { return bytes; }
 private:

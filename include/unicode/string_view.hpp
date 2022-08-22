@@ -4,6 +4,7 @@
 
 #include "unicode/layout.hpp"
 #include "unicode/comparable_interface.hpp"
+#include "unicode/character_view.hpp"
 
 namespace unicode
 {
@@ -28,7 +29,10 @@ public:
 	using const_reference = character_view;
 
 	/// View over empty string
-	constexpr string_view() = default;
+	string_view() = default;
+	/// View over string
+	string_view(const char *bytes) 
+		: string_view(std::string_view(bytes)) {}
 	/// View over string
 	string_view(std::string_view bytes) 
 		: bytes(bytes), layout(layout::of(bytes)) {};

@@ -1,4 +1,5 @@
 #include "unicode/utf8/compare.hpp"
+#include "unicode/string_view.hpp"
 
 #include <string>
 
@@ -33,5 +34,29 @@ TEST(UTF8, compare)
 	{
 		auto result = utf8::compare("в", "б");
 		EXPECT_EQ(result, std::strong_ordering::greater);
+	}
+}
+
+TEST(string_view, compare)
+{
+	{
+		unicode::string_view text = "abcd";
+		EXPECT_EQ(text, text);
+	}
+
+	{
+		// Denormalized unicode 'a' with acute"
+		unicode::string_view denormalized = "a\u0301";
+		// Normalized unicode 'a' with acute
+		unicode::string_view normalized = "\u00e1";
+		EXPECT_EQ(denormalized, normalized);
+	}
+
+	{
+		EXPECT_LT(unicode::string_view("1"), unicode::string_view("2"));
+	}
+
+	{
+		EXPECT_GT(unicode::string_view("в"), unicode::string_view("б"));
 	}
 }

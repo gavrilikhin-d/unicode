@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+#include <string_view>
 #include <vector>
 
 #include "unicode/layout.hpp"
@@ -35,7 +37,10 @@ public:
 		: string_view(std::string_view(bytes)) {}
 	/// View over string
 	string_view(std::string_view bytes) 
-		: bytes(bytes), layout(layout::of(bytes)) {};
+		: bytes(bytes), layout(layout::of(bytes)) {}
+	/// View over string
+	string_view(const std::string &bytes)
+		: string_view(std::string_view(bytes)) {}
 
 	/// Get size of string in characters
 	constexpr size_t size() const noexcept 

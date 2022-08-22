@@ -60,3 +60,29 @@ TEST(string_view, compare)
 		EXPECT_GT(unicode::string_view("в"), "б");
 	}
 }
+
+TEST(string_view, empty)
+{
+	unicode::string_view view = "";
+
+	EXPECT_EQ(view.size(), 0);
+	EXPECT_TRUE(view.empty());
+	EXPECT_EQ(view, "");
+}
+
+TEST(string_view, size)
+{
+	std::string str =
+		"🇺🇸: Hello, world!\n"
+		"🇷🇺: Привет, мир!\n"
+		"🇨🇳: 你好，世界！\n" 
+		"🇯🇵: こんにちは世界！\n" 
+		"🇰🇷: 안녕하세요 세계!\n"
+		"I💜Unicode";
+
+	unicode::string_view view = str;
+
+	EXPECT_EQ(view.size(), 77);
+	EXPECT_FALSE(view.empty());
+	EXPECT_EQ(view, str);
+}

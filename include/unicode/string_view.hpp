@@ -66,6 +66,33 @@ public:
 		std::swap(layout, other.layout);
 	}
 
+	/// Get character by absolute index
+	character_view operator[](size_type index) const noexcept
+	{
+		assert(index < size() && "out of range");
+
+		auto it = layout.offsets.lower_bound(index);
+		assert(it != layout.offsets.end() && "block not found");
+		auto offset = *it;
+
+		auto block_index = std::distance(layout.offsets.begin(), it);
+		auto &block = layout.blocks[block_index];
+
+		return character_view(
+			block.bytes.substr(index - offset, block.size)
+		);
+	}
+
+	/// Get character by index. Negative indexes are relative to end of string
+	template<std::signed_integral index_t>
+	character_view operator[](index_t index) const noexcept
+	{
+		if (index < 0) { index += size(); }
+		assert(0 <= index && index < size() && "out of range");
+
+		return operator[](static_cast<size_type>(index));
+	}
+
 private:
 	/// Bytes of string
 	std::string_view bytes;

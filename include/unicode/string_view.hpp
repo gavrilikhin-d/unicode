@@ -46,7 +46,7 @@ public:
 	constexpr size_t size() const noexcept 
 	{
 		if (layout.offsets.empty()) { return 0; }
-		return layout.offsets.back() + layout.blocks.back().size; 
+		return layout.offsets.back() + layout.blocks.back().size(); 
 	}
 
 	/// Is string empty?
@@ -71,16 +71,12 @@ public:
 	{
 		assert(index < size() && "out of range");
 
-		auto it = layout.offsets.lower_bound(index);
-		assert(it != layout.offsets.end() && "block not found");
-		auto offset = *it;
+		auto block_index = layout.block_index_for_character(index);
 
-		auto block_index = std::distance(layout.offsets.begin(), it);
+		auto offset = layout.offsets[block_index];
 		auto &block = layout.blocks[block_index];
 
-		return character_view(
-			block.bytes.substr(index - offset, block.size)
-		);
+		return character_view(block[index - offset]);
 	}
 
 	/// Get character by index. Negative indexes are relative to end of string
@@ -88,7 +84,7 @@ public:
 	character_view operator[](index_t index) const noexcept
 	{
 		if (index < 0) { index += size(); }
-		assert(0 <= index && index < size() && "out of range");
+		assert(0 <= index && size_type(index) < size() && "out of range");
 
 		return operator[](static_cast<size_type>(index));
 	}

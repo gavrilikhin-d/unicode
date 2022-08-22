@@ -33,19 +33,15 @@ layout layout::of(std::string_view bytes) noexcept
 			layout.offsets.push_back(offset);
 			layout.blocks.push_back(
 				block{
-					.size = 1,
+					.character_size = character_size,
 					.bytes = bytes.substr(start, character_size)
 				}
 			);
+			previous_character_size = character_size;
 			continue;
 		}
 
-		layout.blocks.back().size += 1;
-		layout.blocks.back().bytes = 
-			std::string_view{
-				layout.blocks.back().bytes.data(),
-				layout.blocks.back().bytes.size() + character_size
-			};
+		layout.blocks.back().extend();
 	}
 
 

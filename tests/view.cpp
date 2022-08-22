@@ -53,10 +53,10 @@ TEST(string_view, compare)
 	}
 
 	{
-		EXPECT_LT(unicode::string_view("1"), unicode::string_view("2"));
+		EXPECT_LT(unicode::string_view("1"), "2");
 	}
 
 	{
-		EXPECT_GT(unicode::string_view("в"), unicode::string_view("б"));
+		EXPECT_GT(unicode::string_view("в"), "б");
 	}
 }

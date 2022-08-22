@@ -114,3 +114,30 @@ TEST(string_view, indexing)
 		EXPECT_EQ(c, character_view(substr));
 	}
 }
+
+
+TEST(string_view, negative_indexing)
+{
+	std::string str =
+		"🇺🇸: Hello, world!\n"
+		"🇷🇺: Привет, мир!\n"
+		"🇨🇳: 你好，世界！\n" 
+		"🇯🇵: こんにちは世界！\n" 
+		"🇰🇷: 안녕하세요 세계!\n"
+		"I💜Unicode";
+
+	unicode::string_view view = str;
+
+	auto utext = openUText(str);
+	auto it = getCharacterBreakIterator(utext.get());
+	for (
+		auto start = it->first(), end = it->next(), index = 0;
+		end != icu::BreakIterator::DONE;
+		start = end, end = it->next(), ++index
+	)
+	{
+		auto c = view[-(int(view.size()) - index)];
+		auto substr = str.substr(start, end - start);
+		EXPECT_EQ(c, character_view(substr));
+	}
+}

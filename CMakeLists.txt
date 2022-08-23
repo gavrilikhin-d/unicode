@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 
 project(
 	unicode
-	VERSION "0.0.0"
+	VERSION "1.0.0"
 	DESCRIPTION "Unicode related library"
 	HOMEPAGE_URL https://github.com/gavrilikhin-d/unicode
 	LANGUAGES CXX

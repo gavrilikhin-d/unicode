@@ -20,7 +20,89 @@ public:
 	using difference_type = std::string_view::difference_type;
 
 	/// Iterator over unicode characters
-	class iterator;
+	class iterator
+	{
+	private:
+		/// View over string
+		const string_view *view = nullptr; 
+	public:
+		using value_type = character_view;
+		using difference_type = std::ptrdiff_t;
+		using pointer = void;
+		using reference = void;
+		using iterator_category = std::random_access_iterator_tag;
+
+		/// Index of character
+		size_t index = 0;
+
+		/// Create iterator over unicode characters for string view
+		iterator(const string_view &view, size_t index = 0) noexcept
+			: view(&view), index(index)
+		{}
+
+		/// Random access iterator methods
+		iterator &operator+=(difference_type offset) noexcept
+		{
+			index += offset;
+			return *this;
+		}
+		iterator &operator-=(difference_type offset) noexcept
+		{
+			index -= offset;
+			return *this;
+		}
+		iterator operator+(difference_type offset) const noexcept
+		{
+			return iterator(*view, index + offset);
+		}
+		iterator operator-(difference_type offset) const noexcept
+		{
+			return iterator(*view, index - offset);
+		}
+		difference_type operator-(const iterator &other) const noexcept
+		{
+			assert(
+				view == other.view && 
+				"comparing iterators from different views"
+			);
+			return index - other.index;
+		}
+		iterator &operator++() noexcept
+		{
+			++index;
+			return *this;
+		}
+		iterator operator++(int) noexcept
+		{
+			return iterator(*view, index++);
+		}
+		iterator &operator--() noexcept
+		{
+			--index;
+			return *this;
+		}
+		iterator operator--(int) noexcept
+		{
+			return iterator(*view, index--);
+		}
+		value_type operator*() const noexcept
+		{
+			return view->operator[](index);
+		}
+		value_type operator[](difference_type offset) const noexcept
+		{
+			return view->operator[](index + offset);
+		}
+		bool operator==(const iterator &other) const noexcept
+		{
+			return index == other.index;
+		}
+		auto operator<=>(const iterator &other) const noexcept
+		{
+			return index <=> other.index;
+		}
+	};
+
 	using const_iterator = iterator;
 	using reverse_iterator = std::reverse_iterator<iterator>;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;

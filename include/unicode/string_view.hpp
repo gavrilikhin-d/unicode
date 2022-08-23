@@ -29,7 +29,7 @@ public:
 		using value_type = character_view;
 		using difference_type = std::ptrdiff_t;
 		using pointer = void;
-		using reference = void;
+		using reference = character_view;
 		using iterator_category = std::random_access_iterator_tag;
 
 		/// Index of character

@@ -141,3 +141,43 @@ TEST(string_view, negative_indexing)
 		EXPECT_EQ(c, character_view(substr));
 	}
 }
+
+TEST(string_view, iteration)
+{
+	std::string str =
+		"🇺🇸: Hello, world!\n"
+		"🇷🇺: Привет, мир!\n"
+		"🇨🇳: 你好，世界！\n" 
+		"🇯🇵: こんにちは世界！\n" 
+		"🇰🇷: 안녕하세요 세계!\n"
+		"I💜Unicode";
+
+	unicode::string_view view = str;
+
+	size_t index = 0;
+	for (auto c : view)
+	{
+		EXPECT_EQ(c, view[index]);
+		++index;
+	}
+}
+
+TEST(string_view, reverse_iteration)
+{
+	std::string str =
+		"🇺🇸: Hello, world!\n"
+		"🇷🇺: Привет, мир!\n"
+		"🇨🇳: 你好，世界！\n" 
+		"🇯🇵: こんにちは世界！\n" 
+		"🇰🇷: 안녕하세요 세계!\n"
+		"I💜Unicode";
+
+	unicode::string_view view = str;
+
+	int index = -1;
+	for (auto it = view.rbegin(); it != view.rend(); ++it)
+	{
+		EXPECT_EQ(*it, view[index]);
+		--index;
+	}
+}

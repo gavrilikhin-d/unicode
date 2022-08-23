@@ -8,7 +8,9 @@
 #include <unicode/unistr.h>
 #include <unicode/brkiter.h>
 
-#include "String.hpp"
+#include "unicode/string_view.hpp"
+
+#include "../sources/icu.hpp"
 
 /// Read whole file content
 static std::string readFile(const std::string &path)
@@ -26,7 +28,7 @@ using namespace unicode;
 	static void name(benchmark::State& state) \
 	{ \
 		auto content = readFile("./data/" #name "/wiki.txt"); \
-		String unicode = content; \
+		string_view unicode = content; \
 		for (auto _ : state) \
 		{ \
 			auto c = unicode[std::rand() % unicode.size()]; \

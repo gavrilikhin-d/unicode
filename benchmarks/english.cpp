@@ -8,7 +8,9 @@
 #include <unicode/unistr.h>
 #include <unicode/brkiter.h>
 
-#include "String.hpp"
+#include "unicode/string_view.hpp"
+
+#include "../sources/icu.hpp"
 
 /// Get content of a file
 static std::string getFileContent(const std::string& filename)
@@ -77,12 +79,12 @@ static void englishWithICUUnicodeString(benchmark::State& state)
 BENCHMARK(englishWithICUUnicodeString);
 
 /// Random access to english string with my own implementation
-static void englishWithMyString(benchmark::State& state) 
+static void englishWithUnicodeStringView(benchmark::State& state) 
 {
 	auto &ascii = getASCII();
 	auto &indexes = getIndexes();
 
-	unicode::String str = unicode::String::fromASCII(ascii);
+	unicode::string_view str = ascii;
 
 	for (auto _ : state)
 	{
@@ -90,7 +92,7 @@ static void englishWithMyString(benchmark::State& state)
 		benchmark::DoNotOptimize(c);
 	}
 }
-BENCHMARK(englishWithMyString);
+BENCHMARK(englishWithUnicodeStringView);
 
 
 BENCHMARK_MAIN();

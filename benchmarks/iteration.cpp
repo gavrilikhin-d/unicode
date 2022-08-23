@@ -8,7 +8,9 @@
 #include <unicode/unistr.h>
 #include <unicode/brkiter.h>
 
-#include "String.hpp"
+#include "unicode/string_view.hpp"
+
+#include "../sources/icu.hpp"
 
 /// Read whole file content
 static std::string readFile(const std::string &path)
@@ -26,7 +28,7 @@ using namespace unicode;
 	static void name ## StringIterator(benchmark::State& state) \
 	{ \
 		auto content = readFile("./data/" #name "/wiki.txt"); \
-		String unicode = content; \
+		string_view unicode = content; \
 		for (auto _ : state) \
 		{ \
 			for (auto c : unicode) \
@@ -41,8 +43,8 @@ using namespace unicode;
 	static void name ## BreakIterator(benchmark::State& state) \
 	{ \
 		auto content = readFile("./data/" #name "/wiki.txt"); \
-		auto utext = detail::openUText(content); \
-		auto it = detail::getCharacterBreakIterator(&utext); \
+		auto utext = openUText(content); \
+		auto it = getCharacterBreakIterator(utext.get()); \
 		for (auto _ : state) \
 		{ \
 			for ( \
@@ -56,7 +58,6 @@ using namespace unicode;
 				benchmark::DoNotOptimize(c); \
 			} \
 		} \
-		utext_close(&utext); \
 	} \
 	BENCHMARK(name ## BreakIterator);
 
@@ -69,7 +70,7 @@ using namespace unicode;
 static void englishStandardStringIterator(benchmark::State& state)
 {
 	auto content = readFile("./data/english/wiki.txt");
-	String unicode = content; 
+	std::string unicode = content; 
 	for (auto _ : state) 
 	{ 
 		for (auto c : content) 

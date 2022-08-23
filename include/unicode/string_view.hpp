@@ -124,6 +124,59 @@ public:
 	string_view(const std::string &bytes)
 		: string_view(std::string_view(bytes)) {}
 
+	/// Get iterator for first character
+	iterator begin() const noexcept
+	{
+		return iterator(*this);
+	}
+	/// Get iterator for one past last character
+	iterator end() const noexcept
+	{
+		return iterator(*this, size());
+	}
+	/// Get iterator for first character
+	const_iterator cbegin() const noexcept
+	{
+		return begin();
+	}
+	/// Get iterator for one past last character
+	const_iterator cend() const noexcept
+	{
+		return end();
+	}
+	/// Get reverse iterator for last character
+	reverse_iterator rbegin() const noexcept
+	{
+		return reverse_iterator(end());
+	}
+	/// Get reverse iterator for one before first character
+	reverse_iterator rend() const noexcept
+	{
+		return reverse_iterator(begin());
+	}
+	/// Get reverse iterator for last character
+	const_reverse_iterator crbegin() const noexcept
+	{
+		return const_reverse_iterator(cend());
+	}
+	/// Get reverse iterator for one before first character
+	const_reverse_iterator crend() const noexcept
+	{
+		return const_reverse_iterator(cbegin());
+	}
+
+	/// Get first character
+	character_view front() const noexcept
+	{
+		return operator[](0);
+	}
+
+	/// Get last character
+	character_view back() const noexcept
+	{
+		return operator[](size() - 1);
+	}
+
 	/// Get size of string in characters
 	constexpr size_t size() const noexcept 
 	{

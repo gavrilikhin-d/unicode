@@ -95,10 +95,18 @@ public:
 		}
 		bool operator==(const iterator &other) const noexcept
 		{
+			assert(
+				view == other.view && 
+				"comparing iterators from different views"
+			);
 			return index == other.index;
 		}
 		auto operator<=>(const iterator &other) const noexcept
 		{
+			assert(
+				view == other.view && 
+				"comparing iterators from different views"
+			);
 			return index <=> other.index;
 		}
 	};

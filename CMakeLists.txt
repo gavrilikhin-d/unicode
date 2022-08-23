@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.19)
 
 project(
-	String
+	unicode
 	VERSION "0.0.0"
-	DESCRIPTION "Unicode string library"
-	HOMEPAGE_URL https://github.com/gavrilikhin-d/String
+	DESCRIPTION "Unicode related library"
+	HOMEPAGE_URL https://github.com/gavrilikhin-d/unicode
 	LANGUAGES CXX
 )
 
@@ -73,18 +73,8 @@ while (NOT EXISTS ${ICU_INCLUDE_DIRS}/unicode/brkiter.h)
 	message(FATAL_ERROR "ICU include directory doesn't contain brkiter.h")
 endwhile()
 
-add_library(String INTERFACE)
-# default member initializer for bit-field is a C++20 extension
-target_compile_features(String INTERFACE cxx_std_20)
-target_link_libraries(String INTERFACE ${ICU_LIBRARIES})
-target_include_directories(
-	String INTERFACE
-		${CMAKE_CURRENT_SOURCE_DIR} 
-		${ICU_INCLUDE_DIRS}
-)
-
 include_directories(include)
 add_subdirectory(sources)
 
 add_subdirectory(tests)
-add_subdirectory(benchmarks)
+# add_subdirectory(benchmarks)
